@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meta Ads Tracker
 
-## Getting Started
+Aplicação Next.js para registrar conversões de vendas fechadas no WhatsApp e enviá-las ao Meta Ads pelo fluxo oficial de Business Messaging CAPI.
 
-First, run the development server:
+## O que esta versão faz
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Recebe webhooks do WhatsApp Cloud API.
+- Captura `ctwa_clid` do objeto `referral` quando o lead veio de anúncio Click to WhatsApp.
+- Persiste conversa, mensagens e status no Postgres.
+- Cria ou reutiliza o `dataset_id` do WABA.
+- Envia conversões ao Meta com `action_source=business_messaging` e `messaging_channel=whatsapp`.
+
+## Variáveis obrigatórias
+
+Use [`.env.example`](/Users/brunonikel/metaads-tracker/.env.example:1) como referência.
+
+Obrigatórias para o fluxo CTWA:
+
+- `META_ACCESS_TOKEN`
+- `META_APP_ID`
+- `META_APP_SECRET`
+- `WHATSAPP_BUSINESS_ACCOUNT_ID`
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
+- `POSTGRES_URL`
+- `APP_SECRET`
+- `NEXT_PUBLIC_APP_URL`
+
+Opcionais:
+
+- `META_GRAPH_API_VERSION`
+- `META_TEST_EVENT_CODE`
+- `META_DATASET_ID`
+
+## Setup no Meta
+
+### 1. App e produto
+
+No Meta App Dashboard:
+
+1. Crie ou abra o app que vai receber o webhook.
+2. Adicione o produto `Webhooks`.
+3. Adicione o produto `WhatsApp`.
+4. Garanta que o número de WhatsApp usado no anúncio pertence ao mesmo WABA configurado na aplicação.
+
+### 2. Permissões do token
+
+O token usado em `META_ACCESS_TOKEN` precisa acessar o WABA e permitir gerenciamento de eventos. Para este fluxo, confirme no app e no Business Manager as permissões exigidas pela documentação de Business Messaging CAPI, incluindo:
+
+- `whatsapp_business_management`
+- `whatsapp_business_manage_events`
+
+### 3. Webhook
+
+Configure o callback URL do webhook para:
+
+```text
+https://SEU-DOMINIO/api/webhooks/whatsapp
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No campo Verify Token do Meta App Dashboard, use exatamente o mesmo valor de:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+WHATSAPP_WEBHOOK_VERIFY_TOKEN
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Depois assine o campo de mensagens do WhatsApp para que o Meta envie payloads contendo `messages` e `statuses`.
 
-## Learn More
+### 4. App Secret
 
-To learn more about Next.js, take a look at the following resources:
+Defina o `META_APP_SECRET` da aplicação. Ele é usado para validar a assinatura `X-Hub-Signature-256` dos webhooks.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. WABA
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Preencha:
 
-## Deploy on Vercel
+```text
+WHATSAPP_BUSINESS_ACCOUNT_ID
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Esse é o ID do WhatsApp Business Account real que recebe os leads do anúncio Click to WhatsApp.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 6. Dataset
+
+Se você já tiver um dataset de Business Messaging, pode preencher `META_DATASET_ID`.
+
+Se deixar vazio, a app tenta localizar ou criar o dataset do WABA via Graph API no primeiro envio de conversão.
+
+## Fluxo operacional
+
+1. O usuário clica no anúncio Click to WhatsApp.
+2. O usuário envia mensagem no WhatsApp.
+3. O webhook recebe o payload e salva a conversa com `ctwa_clid`.
+4. A tela `/conversions/new` lista apenas conversas com `ctwa_clid`.
+5. Você registra a venda vinculando a conversa correta.
+6. A API envia a conversão ao dataset do Business Messaging.
+
+## Desenvolvimento local
+
+```bash
+npm install
+npm run dev
+```
+
+Abra:
+
+```text
+http://localhost:3000
+```
+
+## Validação
+
+```bash
+npm run lint
+npm run build
+```
+
+## Observações importantes
+
+- Sem `ctwa_clid`, a conversa não entra no fluxo oficial de atribuição CTWA.
+- A tela de nova venda não usa mais `fbclid` manual.
+- Não salve tokens reais no repositório.
+- Se já houve vazamento de token em arquivo versionado, gere um novo token e revogue o anterior.
+
+## Documentação oficial
+
+- [Business Messaging CAPI](https://developers.facebook.com/docs/marketing-api/conversions-api/business-messaging/)
+- [Customer Information Parameters](https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/customer-information-parameters/)
+- [Meta Webhooks Getting Started](https://developers.facebook.com/docs/graph-api/webhooks/getting-started/)
+- [WhatsApp Cloud API Webhook Payload Examples](https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples/)

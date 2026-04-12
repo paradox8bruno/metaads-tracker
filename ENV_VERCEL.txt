@@ -1,7 +1,21 @@
-META_PIXEL_ID=1456045208473963
+Configure estas variáveis no projeto da Vercel:
+
 META_ACCESS_TOKEN=EAA7llo2cH9gBRNjHAY7dS5dZAh92SyZAWbqY02iKQrn6ul93ajtC9YZAj9QYGadJArVwjBzgHPt9HFcs3MxZACpbfl4Sb34AD8XQAoFxR710ra2izk2EMe7njvIdqZB5ZCy9l1ZBOSj6uAoNQZADz5ISX733Ikesg4vz7E7kDpWLsFCCKqskTRlNrZCRazCRhGFU8ZAIw0cXAcXFZAezFt0ARpidEXT9KPL1kV4xskiC50z
 META_APP_ID=4193084457623512
+META_APP_SECRET=
+META_GRAPH_API_VERSION=v25.0
 META_TEST_EVENT_CODE=TEST84068
+WHATSAPP_BUSINESS_ACCOUNT_ID=25918732601086622
+WHATSAPP_PHONE_NUMBER_ID=1050440834824684
+WHATSAPP_DISPLAY_PHONE_NUMBER=+55 11 93622-9510
+WHATSAPP_VERIFIED_NAME=Paradox
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=6a9d4aa8f67ed9390b90382bbea7f72ed0d9583f3c8c10ba
+META_DATASET_ID=1710893766988755
 POSTGRES_URL=postgresql://neondb_owner:npg_3MLwu6CqJIRV@ep-shiny-salad-anpz77ba-pooler.c-6.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
 APP_SECRET=MetaADS@2024!
 NEXT_PUBLIC_APP_URL=https://metaads-tracker.vercel.app
+
+Notas:
+- `META_APP_SECRET` ainda precisa ser preenchido com o valor real do App Dashboard.
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN` já foi gerado e deve ser configurado igual no Meta App Dashboard.
+- `META_DATASET_ID` foi criado com sucesso no WABA `Paradox`.
