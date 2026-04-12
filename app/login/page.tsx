@@ -14,17 +14,24 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
 
-    if (res.ok) {
-      router.push('/conversions')
-      router.refresh()
-    } else {
-      setError('Senha incorreta. Tente novamente.')
+      if (res.ok) {
+        router.push('/conversions')
+        router.refresh()
+        return
+      }
+
+      const data = await res.json().catch(() => null)
+      setError(data?.error || 'Não foi possível entrar. Tente novamente.')
+    } catch {
+      setError('Erro de conexão ao tentar entrar.')
+    } finally {
       setLoading(false)
     }
   }

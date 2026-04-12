@@ -11,6 +11,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // A rota de autenticação precisa permanecer pública para permitir login/logout
+  if (pathname === '/api/auth') {
+    return NextResponse.next()
+  }
+
   // Rota de login não precisa de autenticação
   if (pathname === '/login') {
     return NextResponse.next()
