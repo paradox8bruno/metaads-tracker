@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { insertConversion, updateConversionMetaStatus, listConversions } from '@/lib/db'
+import {
+  initDB,
+  getWhatsAppConversation,
+  insertConversion,
+  listConversions,
+  updateConversionMetaStatus,
+} from '@/lib/db'
 import { sendConversionEvent } from '@/lib/meta-capi'
 import { normalizeBrazilPhone } from '@/lib/phone'
 
-// GET - Lista conversões
 export async function GET() {
   try {
+    await initDB()
     const conversions = await listConversions()
     return NextResponse.json(conversions)
   } catch (error) {
@@ -17,38 +23,52 @@ export async function GET() {
   }
 }
 
-// POST - Registra nova conversão e envia para Meta CAPI
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    await initDB()
+    const body = (await req.json()) as Record<string, unknown>
 
-    const {
-      customerName,
-      customerPhone,
-      customerEmail,
-      value,
-      currency = 'BRL',
-      productName,
-      notes,
-      eventName = 'Purchase',
-      fbclid,
-    } = body
+    const conversationId = String(body.conversationId || '')
+    const value = Number(body.value)
+    const currency = String(body.currency || 'BRL')
+    const eventName = String(body.eventName || 'Purchase')
 
-    const normalizedCustomerPhone = customerPhone
-      ? normalizeBrazilPhone(String(customerPhone))
-      : null
-
-    // Valida campos obrigatórios
-    if (!value || isNaN(Number(value))) {
-      return NextResponse.json({ error: 'Valor da venda é obrigatório' }, { status: 400 })
-    }
-    if (!customerPhone && !customerEmail) {
+    if (!conversationId) {
       return NextResponse.json(
-        { error: 'Informe pelo menos o telefone ou email do cliente' },
+        { error: 'Selecione uma conversa do WhatsApp com atribuição CTWA.' },
         { status: 400 }
       )
     }
-    if (customerPhone && !normalizedCustomerPhone) {
+
+    if (!Number.isFinite(value) || value <= 0) {
+      return NextResponse.json({ error: 'Valor da venda é obrigatório.' }, { status: 400 })
+    }
+
+    const conversation = await getWhatsAppConversation(conversationId)
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: 'Conversa do WhatsApp não encontrada.' },
+        { status: 404 }
+      )
+    }
+
+    if (!conversation.ctwa_clid) {
+      return NextResponse.json(
+        {
+          error:
+            'Essa conversa ainda não possui ctwa_clid. Só é possível enviar conversões de leads vindos de anúncio Click to WhatsApp.',
+        },
+        { status: 400 }
+      )
+    }
+
+    const providedPhone = typeof body.customerPhone === 'string' ? body.customerPhone : ''
+    const normalizedCustomerPhone = providedPhone
+      ? normalizeBrazilPhone(providedPhone)
+      : conversation.customer_phone
+
+    if (providedPhone && !normalizedCustomerPhone) {
       return NextResponse.json(
         {
           error: 'Telefone inválido. Use DDD + número. Pode digitar com ou sem +55, espaços e traços.',
@@ -57,56 +77,85 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Gera ID único para o evento (usado para deduplicação)
+    const customerName =
+      typeof body.customerName === 'string' && body.customerName.trim()
+        ? body.customerName.trim()
+        : conversation.customer_name || undefined
+
+    const customerEmail =
+      typeof body.customerEmail === 'string' && body.customerEmail.trim()
+        ? body.customerEmail.trim()
+        : undefined
+
+    const productName =
+      typeof body.productName === 'string' && body.productName.trim()
+        ? body.productName.trim()
+        : undefined
+
+    const notes =
+      typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : undefined
+
     const eventId = randomUUID()
 
-    // Salva no banco com status "pending"
     const conversion = await insertConversion({
       customerName,
       customerPhone: normalizedCustomerPhone || undefined,
       customerEmail,
-      value: Number(value),
+      value,
       currency,
       productName,
       notes,
       eventId,
       eventName,
-      source: 'manual',
+      source: 'whatsapp',
+      whatsappConversationId: conversation.id,
+      ctwaClid: conversation.ctwa_clid,
+      sourceRef: `whatsapp:${conversation.id}:${eventId}`,
     })
 
-    // Envia para Meta CAPI
     let metaStatus: 'sent' | 'error' = 'sent'
-    let metaResponse
+    let metaResponse: Record<string, unknown>
+    let metaEventPayload: Record<string, unknown> | null = null
+    let datasetId: string | null = null
 
     try {
-      metaResponse = await sendConversionEvent({
+      const result = await sendConversionEvent({
         eventId,
         eventName,
-        value: Number(value),
+        value,
         currency,
         customerPhone: normalizedCustomerPhone || undefined,
         customerEmail,
         customerName,
-        fbclid,
+        conversation,
       })
 
-      if (metaResponse.error) {
+      datasetId = result.datasetId
+      metaResponse = result.response
+      metaEventPayload = result.eventPayload
+
+      if (result.response.error) {
         metaStatus = 'error'
       }
-    } catch (err) {
+    } catch (error) {
       metaStatus = 'error'
-      metaResponse = { error: String(err) }
+      metaResponse = { error: String(error) }
     }
 
-    // Atualiza status no banco
-    await updateConversionMetaStatus(conversion.id, metaStatus, metaResponse)
+    await updateConversionMetaStatus(conversion.id, metaStatus, metaResponse, {
+      datasetId,
+      ctwaClid: conversation.ctwa_clid,
+      metaEventPayload,
+    })
 
     return NextResponse.json({
       ok: true,
       id: conversion.id,
       metaStatus,
       metaResponse,
-      eventsReceived: metaResponse?.events_received,
+      datasetId,
+      eventsReceived:
+        typeof metaResponse.events_received === 'number' ? metaResponse.events_received : undefined,
     })
   } catch (error) {
     console.error('Erro ao registrar conversão:', error)

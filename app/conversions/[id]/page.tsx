@@ -108,6 +108,10 @@ export default async function ConversionDetailPage({ params }: { params: Promise
                 <p className="text-gray-900 font-medium">{conversion.event_name}</p>
               </div>
               <div>
+                <p className="text-gray-400 text-xs mb-0.5">Origem</p>
+                <p className="text-gray-900 font-medium">{conversion.source}</p>
+              </div>
+              <div>
                 <p className="text-gray-400 text-xs mb-0.5">Status</p>
                 <StatusBadge status={conversion.meta_status} />
               </div>
@@ -120,6 +124,16 @@ export default async function ConversionDetailPage({ params }: { params: Promise
               <div>
                 <p className="text-gray-400 text-xs mb-0.5">Event ID (dedup)</p>
                 <p className="text-gray-600 font-mono text-xs">{conversion.event_id}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-0.5">Dataset ID</p>
+                <p className="text-gray-600 font-mono text-xs">{conversion.dataset_id || '—'}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-gray-400 text-xs mb-0.5">CTWA CLID</p>
+                <p className="text-gray-600 font-mono text-xs break-all">
+                  {conversion.ctwa_clid || '—'}
+                </p>
               </div>
             </div>
           </div>
