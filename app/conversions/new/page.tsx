@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
+import { formatBrazilPhone, normalizeBrazilPhone } from '@/lib/phone'
 
 export default function NewConversionPage() {
   const router = useRouter()
@@ -22,12 +23,32 @@ export default function NewConversionPage() {
     fbclid: '',
   })
 
+  const normalizedPhone = form.customerPhone
+    ? normalizeBrazilPhone(form.customerPhone)
+    : null
+  const phoneIsInvalid = form.customerPhone.trim() !== '' && !normalizedPhone
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  function handlePhoneBlur() {
+    if (!normalizedPhone) return
+
+    setForm(prev => ({
+      ...prev,
+      customerPhone: formatBrazilPhone(normalizedPhone),
+    }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (phoneIsInvalid) {
+      setError('Telefone inválido. Use DDD + número. Ex.: +55 11 99999-9999')
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess(null)
@@ -38,6 +59,7 @@ export default function NewConversionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          customerPhone: normalizedPhone || form.customerPhone,
           value: parseFloat(form.value.replace(',', '.')),
         }),
       })
@@ -130,10 +152,16 @@ export default function NewConversionPage() {
                     name="customerPhone"
                     value={form.customerPhone}
                     onChange={handleChange}
-                    placeholder="(11) 99999-9999"
+                    onBlur={handlePhoneBlur}
+                    placeholder="+55 11 99999-9999"
+                    inputMode="tel"
                     className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Principal para matching no Meta</p>
+                  <p className={`text-xs mt-1 ${phoneIsInvalid ? 'text-red-500' : 'text-gray-400'}`}>
+                    {phoneIsInvalid
+                      ? 'Formato inválido. Informe DDD + número; o sistema assume Brasil (+55).'
+                      : 'Pode digitar com ou sem +55, espaços e traços. O envio ao Meta sai como 5511999999999.'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

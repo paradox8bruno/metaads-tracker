@@ -1,4 +1,5 @@
 import { createHash } from 'crypto'
+import { normalizeBrazilPhone } from './phone'
 
 /**
  * Normaliza e hasheia dados de PII para o Meta CAPI.
@@ -10,24 +11,15 @@ export function hashData(value: string): string {
 }
 
 /**
- * Normaliza telefone brasileiro para formato E.164 antes de hashear.
+ * Normaliza telefone brasileiro para dígitos com código do país antes de hashear.
  * Ex: "(11) 99999-9999" → "5511999999999"
  */
-export function normalizeAndHashPhone(phone: string): string {
-  // Remove tudo que não é número
-  let digits = phone.replace(/\D/g, '')
+export function normalizeAndHashPhone(phone: string): string | null {
+  const normalizedPhone = normalizeBrazilPhone(phone)
 
-  // Se começar com 0, remove
-  if (digits.startsWith('0')) {
-    digits = digits.substring(1)
-  }
+  if (!normalizedPhone) return null
 
-  // Se não tiver código do país (BR = 55), adiciona
-  if (!digits.startsWith('55') && digits.length <= 11) {
-    digits = '55' + digits
-  }
-
-  return hashData(digits)
+  return hashData(normalizedPhone)
 }
 
 /**

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { insertConversion, updateConversionMetaStatus, listConversions } from '@/lib/db'
 import { sendConversionEvent } from '@/lib/meta-capi'
+import { normalizeBrazilPhone } from '@/lib/phone'
 
 // GET - Lista conversões
 export async function GET() {
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest) {
       fbclid,
     } = body
 
+    const normalizedCustomerPhone = customerPhone
+      ? normalizeBrazilPhone(String(customerPhone))
+      : null
+
     // Valida campos obrigatórios
     if (!value || isNaN(Number(value))) {
       return NextResponse.json({ error: 'Valor da venda é obrigatório' }, { status: 400 })
@@ -43,6 +48,14 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+    if (customerPhone && !normalizedCustomerPhone) {
+      return NextResponse.json(
+        {
+          error: 'Telefone inválido. Use DDD + número. Pode digitar com ou sem +55, espaços e traços.',
+        },
+        { status: 400 }
+      )
+    }
 
     // Gera ID único para o evento (usado para deduplicação)
     const eventId = randomUUID()
@@ -50,7 +63,7 @@ export async function POST(req: NextRequest) {
     // Salva no banco com status "pending"
     const conversion = await insertConversion({
       customerName,
-      customerPhone,
+      customerPhone: normalizedCustomerPhone || undefined,
       customerEmail,
       value: Number(value),
       currency,
@@ -71,7 +84,7 @@ export async function POST(req: NextRequest) {
         eventName,
         value: Number(value),
         currency,
-        customerPhone,
+        customerPhone: normalizedCustomerPhone || undefined,
         customerEmail,
         customerName,
         fbclid,

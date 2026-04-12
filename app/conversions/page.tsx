@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { listConversions, type Conversion } from '@/lib/db'
 import { Navbar } from '@/components/navbar'
+import { formatBrazilPhone } from '@/lib/phone'
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
@@ -139,7 +140,9 @@ export default async function ConversionsPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="font-medium text-gray-900">{c.customer_name || '—'}</div>
-                      <div className="text-gray-400 text-xs">{c.customer_phone || c.customer_email || ''}</div>
+                      <div className="text-gray-400 text-xs">
+                        {c.customer_phone ? formatBrazilPhone(c.customer_phone) : c.customer_email || ''}
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-gray-600">{c.product_name || '—'}</td>
                     <td className="px-5 py-4 text-right font-semibold text-gray-900">

@@ -34,7 +34,10 @@ export async function sendConversionEvent(data: ConversionEventData): Promise<Me
   const userData: Record<string, string> = {}
 
   if (data.customerPhone) {
-    userData.ph = normalizeAndHashPhone(data.customerPhone)
+    const hashedPhone = normalizeAndHashPhone(data.customerPhone)
+    if (hashedPhone) {
+      userData.ph = hashedPhone
+    }
   }
   if (data.customerEmail) {
     userData.em = hashEmail(data.customerEmail)

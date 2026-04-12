@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getConversion } from '@/lib/db'
 import { Navbar } from '@/components/navbar'
+import { formatBrazilPhone } from '@/lib/phone'
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
@@ -75,7 +76,9 @@ export default async function ConversionDetailPage({ params }: { params: Promise
               </div>
               <div>
                 <p className="text-gray-400 text-xs mb-0.5">Telefone</p>
-                <p className="text-gray-900 font-medium">{conversion.customer_phone || '—'}</p>
+                <p className="text-gray-900 font-medium">
+                  {conversion.customer_phone ? formatBrazilPhone(conversion.customer_phone) : '—'}
+                </p>
               </div>
               <div>
                 <p className="text-gray-400 text-xs mb-0.5">Email</p>
