@@ -1,0 +1,48 @@
+========================================================
+  VARIÁVEIS DE AMBIENTE - VERCEL
+  Projeto: MetaADS Tracker
+
+  Como usar:
+  1. Acesse vercel.com → seu projeto metaads-tracker
+  2. Vá em Settings → Environment Variables
+  3. Adicione cada variável abaixo (Nome + Valor)
+  4. Depois clique em Redeploy
+========================================================
+
+---- META ADS (Conversions API) ----
+
+META_PIXEL_ID
+1456045208473963
+
+META_ACCESS_TOKEN
+EAA7llo2cH9gBRNjHAY7dS5dZAh92SyZAWbqY02iKQrn6ul93ajtC9YZAj9QYGadJArVwjBzgHPt9HFcs3MxZACpbfl4Sb34AD8XQAoFxR710ra2izk2EMe7njvIdqZB5ZCy9l1ZBOSj6uAoNQZADz5ISX733Ikesg4vz7E7kDpWLsFCCKqskTRlNrZCRazCRhGFU8ZAIw0cXAcXFZAezFt0ARpidEXT9KPL1kV4xskiC50z
+
+META_APP_ID
+4193084457623512
+
+META_TEST_EVENT_CODE
+TEST84068
+
+---- BANCO DE DADOS (Neon) ----
+
+POSTGRES_URL
+postgresql://neondb_owner:npg_3MLwu6CqJIRV@ep-shiny-salad-anpz77ba-pooler.c-6.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
+
+---- SEGURANÇA DO PAINEL ----
+
+APP_SECRET
+MetaADS@2024!
+
+---- URL DO APP ----
+
+NEXT_PUBLIC_APP_URL
+https://metaads-tracker.vercel.app
+
+========================================================
+  ATENÇÃO:
+  - META_TEST_EVENT_CODE: mantenha durante os testes.
+    Quando tudo estiver ok, DELETE essa variável na Vercel
+    para que os eventos vão para as campanhas reais.
+  - Nunca compartilhe esse arquivo publicamente.
+  - A senha do painel é: MetaADS@2024!
+========================================================
