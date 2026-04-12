@@ -2,7 +2,7 @@ Configure estas variáveis no projeto da Vercel:
 
 META_ACCESS_TOKEN=EAA7llo2cH9gBRNjHAY7dS5dZAh92SyZAWbqY02iKQrn6ul93ajtC9YZAj9QYGadJArVwjBzgHPt9HFcs3MxZACpbfl4Sb34AD8XQAoFxR710ra2izk2EMe7njvIdqZB5ZCy9l1ZBOSj6uAoNQZADz5ISX733Ikesg4vz7E7kDpWLsFCCKqskTRlNrZCRazCRhGFU8ZAIw0cXAcXFZAezFt0ARpidEXT9KPL1kV4xskiC50z
 META_APP_ID=4193084457623512
-META_APP_SECRET=
+META_APP_SECRET=7b7d54b5cbca5a03517724cdfedae4b8
 META_GRAPH_API_VERSION=v25.0
 META_TEST_EVENT_CODE=TEST84068
 WHATSAPP_BUSINESS_ACCOUNT_ID=25918732601086622
@@ -16,6 +16,5 @@ APP_SECRET=MetaADS@2024!
 NEXT_PUBLIC_APP_URL=https://metaads-tracker.vercel.app
 
 Notas:
-- `META_APP_SECRET` ainda precisa ser preenchido com o valor real do App Dashboard.
 - `WHATSAPP_WEBHOOK_VERIFY_TOKEN` já foi gerado e deve ser configurado igual no Meta App Dashboard.
 - `META_DATASET_ID` foi criado com sucesso no WABA `Paradox`.
