@@ -3,7 +3,6 @@ import { hashEmail, normalizeAndHashPhone } from './hash'
 
 const GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION || 'v25.0'
 const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
-const TEST_EVENT_CODE = process.env.META_TEST_EVENT_CODE
 
 export interface ConversionEventData {
   eventId: string
@@ -13,6 +12,7 @@ export interface ConversionEventData {
   customerPhone?: string
   customerEmail?: string
   customerName?: string
+  testEventCode?: string | null
   conversation: Pick<WhatsAppConversation, 'waba_id' | 'ctwa_clid'>
 }
 
@@ -201,8 +201,8 @@ export async function sendConversionEvent(
     data: [eventPayload],
   }
 
-  if (TEST_EVENT_CODE) {
-    body.test_event_code = TEST_EVENT_CODE
+  if (data.testEventCode) {
+    body.test_event_code = data.testEventCode
   }
 
   const response = (await graphApiRequest(`/${datasetId}/events`, {

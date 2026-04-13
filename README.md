@@ -20,6 +20,7 @@ Obrigatórias para o fluxo CTWA:
 - `META_APP_ID`
 - `META_APP_SECRET`
 - `WHATSAPP_BUSINESS_ACCOUNT_ID`
+- `WHATSAPP_PHONE_NUMBER_ID`
 - `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
 - `POSTGRES_URL`
 - `APP_SECRET`
@@ -65,6 +66,8 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN
 
 Depois assine o campo de mensagens do WhatsApp para que o Meta envie payloads contendo `messages` e `statuses`.
 
+O app também precisa ficar inscrito no WABA. Se `subscribed_apps` estiver vazio, mensagens reais não chegam ao webhook mesmo com o callback URL validado.
+
 ### 4. App Secret
 
 Defina o `META_APP_SECRET` da aplicação. Ele é usado para validar a assinatura `X-Hub-Signature-256` dos webhooks.
@@ -78,6 +81,14 @@ WHATSAPP_BUSINESS_ACCOUNT_ID
 ```
 
 Esse é o ID do WhatsApp Business Account real que recebe os leads do anúncio Click to WhatsApp.
+
+Preencha também:
+
+```text
+WHATSAPP_PHONE_NUMBER_ID
+```
+
+O webhook processa apenas mensagens do número configurado para evitar mistura com outros assets do app.
 
 ### 6. Dataset
 
@@ -118,6 +129,7 @@ npm run build
 
 - Sem `ctwa_clid`, a conversa não entra no fluxo oficial de atribuição CTWA.
 - A tela de nova venda não usa mais `fbclid` manual.
+- `META_TEST_EVENT_CODE` é opcional e só deve ser usado quando você marcar o envio como teste na tela de nova venda.
 - Não salve tokens reais no repositório.
 - Se já houve vazamento de token em arquivo versionado, gere um novo token e revogue o anterior.
 

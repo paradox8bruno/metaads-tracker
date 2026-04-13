@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     const value = Number(body.value)
     const currency = String(body.currency || 'BRL')
     const eventName = String(body.eventName || 'Purchase')
+    const useTestEventCode = body.useTestEventCode === true
 
     if (!conversationId) {
       return NextResponse.json(
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
 
     if (!Number.isFinite(value) || value <= 0) {
       return NextResponse.json({ error: 'Valor da venda é obrigatório.' }, { status: 400 })
+    }
+
+    if (useTestEventCode && !process.env.META_TEST_EVENT_CODE) {
+      return NextResponse.json(
+        { error: 'META_TEST_EVENT_CODE não configurada para envio em modo de teste.' },
+        { status: 400 }
+      )
     }
 
     const conversation = await getWhatsAppConversation(conversationId)
@@ -127,6 +135,7 @@ export async function POST(req: NextRequest) {
         customerPhone: normalizedCustomerPhone || undefined,
         customerEmail,
         customerName,
+        testEventCode: useTestEventCode ? process.env.META_TEST_EVENT_CODE : undefined,
         conversation,
       })
 
@@ -154,6 +163,7 @@ export async function POST(req: NextRequest) {
       metaStatus,
       metaResponse,
       datasetId,
+      testEventCodeUsed: useTestEventCode ? process.env.META_TEST_EVENT_CODE : undefined,
       eventsReceived:
         typeof metaResponse.events_received === 'number' ? metaResponse.events_received : undefined,
     })

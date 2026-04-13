@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const APP_SECRET = process.env.APP_SECRET || 'metaads2024'
+const APP_SECRET = process.env.APP_SECRET
 
 export async function POST(req: NextRequest) {
+  if (!APP_SECRET) {
+    return NextResponse.json({ error: 'APP_SECRET não configurada.' }, { status: 500 })
+  }
+
   const { password } = await req.json()
 
   if (password !== APP_SECRET) {

@@ -58,6 +58,7 @@ export default function NewConversionPage() {
     productName: '',
     notes: '',
     eventName: 'Purchase',
+    useTestEventCode: false,
   })
 
   useEffect(() => {
@@ -104,7 +105,12 @@ export default function NewConversionPage() {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const value =
+      e.target instanceof HTMLInputElement && e.target.type === 'checkbox'
+        ? e.target.checked
+        : e.target.value
+
+    setForm(prev => ({ ...prev, [e.target.name]: value }))
   }
 
   function handleConversationChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -500,6 +506,24 @@ export default function NewConversionPage() {
               <p className="text-xs text-gray-500 mt-2">
                 A conversa selecionada acima é a origem oficial da atribuição desta conversão.
               </p>
+              <label className="mt-4 flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+                <input
+                  type="checkbox"
+                  name="useTestEventCode"
+                  checked={form.useTestEventCode}
+                  onChange={handleChange}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-700">
+                    Enviar como evento de teste
+                  </span>
+                  <span className="block text-xs text-gray-500 mt-1">
+                    Use isso apenas para validar em Test Events. Desmarcado, a conversão segue como
+                    evento real.
+                  </span>
+                </span>
+              </label>
             </div>
           </div>
 

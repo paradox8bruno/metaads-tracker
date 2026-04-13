@@ -10,9 +10,10 @@ import {
   verifyMetaWebhookSignature,
 } from '@/lib/meta-webhooks'
 
-const VERIFY_TOKEN =
-  process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.META_WEBHOOK_VERIFY_TOKEN
+const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
 const APP_SECRET = process.env.META_APP_SECRET
+const EXPECTED_WABA_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || null
+const EXPECTED_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || null
 
 interface WebhookContact {
   wa_id?: string
@@ -165,10 +166,16 @@ export async function POST(req: NextRequest) {
   let conversationsUpserted = 0
   let messageEventsStored = 0
   let statusEventsStored = 0
+  let ignoredEntries = 0
+  let ignoredChanges = 0
 
   for (const entry of payload.entry) {
     const wabaId = entry.id
     if (!wabaId) continue
+    if (EXPECTED_WABA_ID && wabaId !== EXPECTED_WABA_ID) {
+      ignoredEntries += 1
+      continue
+    }
 
     for (const change of entry.changes || []) {
       if (change.field !== 'messages' || !change.value) continue
@@ -180,6 +187,11 @@ export async function POST(req: NextRequest) {
 
       const phoneNumberId = value.metadata?.phone_number_id || null
       const displayPhoneNumber = value.metadata?.display_phone_number || null
+
+      if (EXPECTED_PHONE_NUMBER_ID && phoneNumberId !== EXPECTED_PHONE_NUMBER_ID) {
+        ignoredChanges += 1
+        continue
+      }
 
       const contactsByWaId = new Map<string, WebhookContact>()
       for (const contact of value.contacts || []) {
@@ -282,5 +294,7 @@ export async function POST(req: NextRequest) {
     conversationsUpserted,
     messageEventsStored,
     statusEventsStored,
+    ignoredEntries,
+    ignoredChanges,
   })
 }
