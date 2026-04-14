@@ -279,6 +279,41 @@ export async function listConversions(): Promise<Conversion[]> {
   return rows as Conversion[]
 }
 
+export async function countConversions(options?: {
+  eventName?: string
+  status?: Conversion['meta_status']
+}): Promise<number> {
+  const eventName = options?.eventName || null
+  const status = options?.status || null
+
+  const rows =
+    eventName && status
+      ? await sql`
+          SELECT count(*)::int AS count
+          FROM conversions
+          WHERE event_name = ${eventName}
+            AND meta_status = ${status}
+        `
+      : eventName
+        ? await sql`
+            SELECT count(*)::int AS count
+            FROM conversions
+            WHERE event_name = ${eventName}
+          `
+        : status
+          ? await sql`
+              SELECT count(*)::int AS count
+              FROM conversions
+              WHERE meta_status = ${status}
+            `
+          : await sql`
+              SELECT count(*)::int AS count
+              FROM conversions
+            `
+
+  return Number(rows[0]?.count || 0)
+}
+
 export async function getConversion(id: string): Promise<Conversion | null> {
   const rows = await sql`
     SELECT *
@@ -299,6 +334,18 @@ export async function getConversionBySourceRef(sourceRef: string): Promise<Conve
   `
 
   return (rows[0] as Conversion) || null
+}
+
+export async function listLeadConversions(): Promise<Conversion[]> {
+  const rows = await sql`
+    SELECT *
+    FROM conversions
+    WHERE event_name = 'LeadSubmitted'
+    ORDER BY created_at DESC
+    LIMIT 300
+  `
+
+  return rows as Conversion[]
 }
 
 export async function listWhatsAppConversations(options?: {

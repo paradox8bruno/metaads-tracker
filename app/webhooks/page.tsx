@@ -1,30 +1,22 @@
+import Link from 'next/link'
 import { Navbar } from '@/components/navbar'
 import {
+  countConversions,
   countWebhookDeliveries,
   countWhatsAppConversations,
   countWhatsAppMessages,
   initDB,
+  listLeadConversions,
   listWebhookDeliveries,
   listWhatsAppConversations,
   listWhatsAppMessages,
+  type Conversion,
   type WebhookDelivery,
   type WhatsAppConversation,
   type WhatsAppMessage,
 } from '@/lib/db'
+import { formatDatabaseTimestamp } from '@/lib/datetime'
 import { formatBrazilPhone } from '@/lib/phone'
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return '—'
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(new Date(dateStr))
-}
 
 function formatConversationPhone(phone: string | null) {
   if (!phone) return '—'
@@ -48,7 +40,7 @@ function AttributionBadge({ conversation }: { conversation: WhatsAppConversation
   if (conversation.ctwa_clid) {
     return (
       <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-        CTWA atribuido
+        CTWA atribuído
       </span>
     )
   }
@@ -77,14 +69,68 @@ function OutcomeBadge({ delivery }: { delivery: WebhookDelivery }) {
   )
 }
 
+function LeadStatusBadge({ conversion }: { conversion?: Conversion }) {
+  if (!conversion) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+        Sem lead enviado
+      </span>
+    )
+  }
+
+  const styles = {
+    sent: 'bg-green-100 text-green-700',
+    error: 'bg-red-100 text-red-700',
+    pending: 'bg-yellow-100 text-yellow-800',
+  }[conversion.meta_status]
+
+  const labels = {
+    sent: 'Lead enviado',
+    error: 'Lead com erro',
+    pending: 'Lead pendente',
+  }[conversion.meta_status]
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${styles}`}>
+      {labels}
+    </span>
+  )
+}
+
+function SignatureBadge({ delivery }: { delivery: WebhookDelivery }) {
+  const label =
+    delivery.signature_valid === null
+      ? 'Assinatura n/a'
+      : delivery.signature_valid
+        ? 'Assinatura ok'
+        : 'Assinatura inválida'
+
+  const className =
+    delivery.signature_valid === null
+      ? 'bg-gray-100 text-gray-700'
+      : delivery.signature_valid
+        ? 'bg-blue-100 text-blue-700'
+        : 'bg-red-100 text-red-700'
+
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${className}`}>
+      {label}
+    </span>
+  )
+}
+
 export default async function WebhookHistoryPage() {
   let deliveries: WebhookDelivery[] = []
+  let leadConversions: Conversion[] = []
   let conversations: WhatsAppConversation[] = []
   let messages: WhatsAppMessage[] = []
   let totalDeliveries = 0
   let totalConversations = 0
   let totalAttributed = 0
   let totalMessages = 0
+  let totalLeadCreated = 0
+  let totalLeadSent = 0
+  let totalLeadError = 0
   let dbError: string | null = null
 
   try {
@@ -92,24 +138,41 @@ export default async function WebhookHistoryPage() {
 
     ;[
       deliveries,
+      leadConversions,
       conversations,
       messages,
       totalDeliveries,
       totalConversations,
       totalAttributed,
       totalMessages,
-    ] =
-      await Promise.all([
-        listWebhookDeliveries({ limit: 100 }),
-        listWhatsAppConversations(),
-        listWhatsAppMessages({ limit: 100 }),
-        countWebhookDeliveries(),
-        countWhatsAppConversations(),
-        countWhatsAppConversations({ onlyAttributed: true }),
-        countWhatsAppMessages(),
-      ])
+      totalLeadCreated,
+      totalLeadSent,
+      totalLeadError,
+    ] = await Promise.all([
+      listWebhookDeliveries({ limit: 100 }),
+      listLeadConversions(),
+      listWhatsAppConversations(),
+      listWhatsAppMessages({ limit: 100 }),
+      countWebhookDeliveries(),
+      countWhatsAppConversations(),
+      countWhatsAppConversations({ onlyAttributed: true }),
+      countWhatsAppMessages(),
+      countConversions({ eventName: 'LeadSubmitted' }),
+      countConversions({ eventName: 'LeadSubmitted', status: 'sent' }),
+      countConversions({ eventName: 'LeadSubmitted', status: 'error' }),
+    ])
   } catch (error) {
     dbError = String(error)
+  }
+
+  const totalUnattributed = Math.max(0, totalConversations - totalAttributed)
+  const totalLeadPending = Math.max(0, totalLeadCreated - totalLeadSent - totalLeadError)
+
+  const leadByConversationId = new Map<string, Conversion>()
+  for (const conversion of leadConversions) {
+    if (conversion.whatsapp_conversation_id && !leadByConversationId.has(conversion.whatsapp_conversation_id)) {
+      leadByConversationId.set(conversion.whatsapp_conversation_id, conversion)
+    }
   }
 
   return (
@@ -118,10 +181,10 @@ export default async function WebhookHistoryPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Histórico do Webhook</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Histórico do webhook</h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            Tudo que o WhatsApp webhook recebeu. A tela de nova venda mostra apenas conversas com
-            `ctwa_clid`; aqui você vê também mensagens sem atribuição.
+            Auditoria completa do que entrou pelo webhook do WhatsApp: requests brutos, conversas,
+            mensagens, atribuição CTWA e o lead automático enviado ao Meta.
           </p>
         </div>
 
@@ -134,12 +197,18 @@ export default async function WebhookHistoryPage() {
 
         {!dbError && (
           <>
-            <div className="mb-6 grid gap-4 md:grid-cols-4">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                   Requests do webhook
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{totalDeliveries}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Eventos recebidos
+                </p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{totalMessages}</p>
               </div>
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -155,20 +224,154 @@ export default async function WebhookHistoryPage() {
               </div>
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Eventos do webhook
+                  Conversas sem CTWA
                 </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{totalMessages}</p>
+                <p className="mt-1 text-2xl font-bold text-yellow-700">{totalUnattributed}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Leads automáticos
+                </p>
+                <p className="mt-1 text-2xl font-bold text-blue-700">{totalLeadCreated}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Leads enviados
+                </p>
+                <p className="mt-1 text-2xl font-bold text-green-600">{totalLeadSent}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Leads com erro
+                </p>
+                <p className="mt-1 text-2xl font-bold text-red-600">{totalLeadError}</p>
               </div>
             </div>
 
-            <div className="mb-8 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm font-medium text-yellow-900">Leitura do teste atual</p>
-              <p className="mt-1 text-sm text-yellow-800">
-                Se a mensagem aparece aqui, mas não aparece em `Nova Venda`, o webhook chegou sem
-                `referral.ctwa_clid`. Isso significa que o lead entrou no WhatsApp, mas não entrou
-                no fluxo oficial de atribuição CTWA que esta aplicação exige para enviar conversão.
+            <div className="mb-8 rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm font-medium text-blue-900">Leitura operacional</p>
+              <p className="mt-1 text-sm text-blue-800">
+                Quando a conversa chega com <code className="rounded bg-blue-100 px-1 py-0.5">ctwa_clid</code>,
+                o sistema registra a conversa, grava o request bruto e cria o evento{' '}
+                <code className="rounded bg-blue-100 px-1 py-0.5">LeadSubmitted</code>{' '}
+                automaticamente. Quando a conversa chega sem CTWA, ela continua aparecendo aqui
+                para auditoria e debug, mas não entra no fluxo oficial de atribuição do Meta.
+              </p>
+              <p className="mt-2 text-xs text-blue-700">
+                Leads pendentes: <span className="font-semibold">{totalLeadPending}</span> •
+                Leads exibidos na tabela: <span className="font-semibold">{leadConversions.length}</span>
               </p>
             </div>
+
+            <section className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Leads automáticos enviados</h2>
+                  <p className="text-xs text-gray-500">
+                    Conversas atribuídas que geraram <code>LeadSubmitted</code>.
+                  </p>
+                </div>
+                <Link
+                  href="/conversions"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Ver todas as conversões →
+                </Link>
+              </div>
+
+              {leadConversions.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                  Nenhum lead automático registrado ainda.
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[1100px] text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 bg-gray-50">
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Data
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Cliente
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Telefone
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Conversa
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            CTWA CLID
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Status Meta
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                            Detalhes
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {leadConversions.map(conversion => (
+                          <tr key={conversion.id} className="align-top">
+                            <td className="px-4 py-4 text-gray-600">
+                              {formatDatabaseTimestamp(conversion.created_at, {
+                                withSeconds: true,
+                              })}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="font-medium text-gray-900">
+                                {conversion.customer_name || 'Lead sem nome'}
+                              </div>
+                              <div className="mt-1 font-mono text-[11px] text-gray-400">
+                                {conversion.source_ref || 'sem source_ref'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-gray-600">
+                              {formatConversationPhone(conversion.customer_phone)}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="font-mono text-xs text-gray-600">
+                                {conversion.whatsapp_conversation_id || '—'}
+                              </div>
+                              {conversion.whatsapp_conversation_id && (
+                                <div className="mt-1 text-xs text-gray-400">
+                                  Origem: {conversion.source}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="max-w-xs break-all font-mono text-xs text-gray-600">
+                                {conversion.ctwa_clid || '—'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <LeadStatusBadge conversion={conversion} />
+                              <div className="mt-1 text-xs text-gray-400">
+                                {conversion.meta_sent_at
+                                  ? `Meta: ${formatDatabaseTimestamp(conversion.meta_sent_at, {
+                                      withSeconds: true,
+                                    })}`
+                                  : 'Ainda sem confirmação de envio'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <Link
+                                href={`/conversions/${conversion.id}`}
+                                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                              >
+                                Abrir →
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
@@ -192,13 +395,13 @@ export default async function WebhookHistoryPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-semibold text-gray-900">Webhook recebido</h3>
                             <OutcomeBadge delivery={delivery} />
-                            <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                              assinatura {delivery.signature_valid === null ? 'n/a' : delivery.signature_valid ? 'ok' : 'inválida'}
-                            </span>
+                            <SignatureBadge delivery={delivery} />
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            {formatDate(delivery.created_at)} • {delivery.http_method} •{' '}
-                            {delivery.event_type || 'sem object'}
+                            {formatDatabaseTimestamp(delivery.created_at, {
+                              withSeconds: true,
+                            })}{' '}
+                            • {delivery.http_method} • {delivery.event_type || 'sem object'}
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs text-gray-600 md:grid-cols-3">
@@ -281,90 +484,142 @@ export default async function WebhookHistoryPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {conversations.map(conversation => (
-                    <article
-                      key={conversation.id}
-                      className="rounded-xl border border-gray-200 bg-white p-5"
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {conversation.customer_name || 'Lead sem nome'}
-                            </h3>
-                            <AttributionBadge conversation={conversation} />
+                  {conversations.map(conversation => {
+                    const leadConversion = leadByConversationId.get(conversation.id)
+
+                    return (
+                      <article
+                        key={conversation.id}
+                        className="rounded-xl border border-gray-200 bg-white p-5"
+                      >
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="font-semibold text-gray-900">
+                                {conversation.customer_name || 'Lead sem nome'}
+                              </h3>
+                              <AttributionBadge conversation={conversation} />
+                              <LeadStatusBadge conversion={leadConversion} />
+                            </div>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {formatConversationPhone(conversation.customer_phone)}
+                            </p>
                           </div>
-                          <p className="mt-1 text-sm text-gray-600">
-                            {formatConversationPhone(conversation.customer_phone)}
-                          </p>
+                          <div className="text-xs text-gray-500">
+                            Atualizado em{' '}
+                            {formatDatabaseTimestamp(conversation.updated_at, {
+                              withSeconds: true,
+                            })}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          Atualizado em {formatDate(conversation.updated_at)}
-                        </div>
-                      </div>
 
-                      <div className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-                        <div>
-                          <p className="text-xs text-gray-400">WA ID</p>
-                          <p className="break-all font-mono text-xs text-gray-700">
-                            {conversation.wa_id}
-                          </p>
+                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
+                          <div>
+                            <p className="text-xs text-gray-400">WA ID</p>
+                            <p className="break-all font-mono text-xs text-gray-700">
+                              {conversation.wa_id}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Número WhatsApp Business</p>
+                            <p className="break-all font-mono text-xs text-gray-700">
+                              {conversation.display_phone_number ||
+                                conversation.phone_number_id ||
+                                '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">CTWA CLID</p>
+                            <p className="break-all font-mono text-xs text-gray-700">
+                              {conversation.ctwa_clid || '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Última mensagem</p>
+                            <p className="text-gray-700">{conversation.latest_message_text || '—'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-400">Número WhatsApp Business</p>
-                          <p className="break-all font-mono text-xs text-gray-700">
-                            {conversation.display_phone_number || conversation.phone_number_id || '—'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400">CTWA CLID</p>
-                          <p className="break-all font-mono text-xs text-gray-700">
-                            {conversation.ctwa_clid || '—'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400">Última mensagem</p>
-                          <p className="text-gray-700">{conversation.latest_message_text || '—'}</p>
-                        </div>
-                      </div>
 
-                      <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
-                        <div>
-                          <p className="text-xs text-gray-400">Tipo de referral</p>
-                          <p className="text-gray-700">{conversation.referral_source_type || '—'}</p>
+                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
+                          <div>
+                            <p className="text-xs text-gray-400">Criada em</p>
+                            <p className="text-gray-700">
+                              {formatDatabaseTimestamp(conversation.created_at, {
+                                withSeconds: true,
+                              })}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Último evento</p>
+                            <p className="text-gray-700">
+                              {formatDatabaseTimestamp(
+                                conversation.latest_message_at || conversation.updated_at,
+                                { withSeconds: true }
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Tipo de referral</p>
+                            <p className="text-gray-700">{conversation.referral_source_type || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Headline do anúncio</p>
+                            <p className="text-gray-700">{conversation.referral_headline || '—'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-400">Headline do anúncio</p>
-                          <p className="text-gray-700">{conversation.referral_headline || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400">URL de origem</p>
-                          <p className="break-all text-gray-700">
-                            {conversation.referral_source_url || '—'}
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="mt-4 space-y-2">
-                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
-                            Referral bruto
-                          </summary>
-                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                            {JSON.stringify(conversation.raw_referral, null, 2)}
-                          </pre>
-                        </details>
-                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
-                            Última mensagem bruta
-                          </summary>
-                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                            {JSON.stringify(conversation.raw_last_message, null, 2)}
-                          </pre>
-                        </details>
-                      </div>
-                    </article>
-                  ))}
+                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
+                          <div>
+                            <p className="text-xs text-gray-400">URL de origem</p>
+                            <p className="break-all text-gray-700">
+                              {conversation.referral_source_url || '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Lead automático vinculado</p>
+                            {leadConversion ? (
+                              <div>
+                                <p className="font-mono text-xs text-gray-700">
+                                  {leadConversion.id}
+                                </p>
+                                <Link
+                                  href={`/conversions/${leadConversion.id}`}
+                                  className="mt-1 inline-flex text-xs font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                  Abrir conversão →
+                                </Link>
+                              </div>
+                            ) : (
+                              <p className="text-gray-700">
+                                {conversation.ctwa_clid
+                                  ? 'Ainda não há lead automático vinculado.'
+                                  : 'Não se aplica: conversa sem CTWA.'}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                              Referral bruto
+                            </summary>
+                            <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                              {JSON.stringify(conversation.raw_referral, null, 2)}
+                            </pre>
+                          </details>
+                          <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                              Última mensagem bruta
+                            </summary>
+                            <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                              {JSON.stringify(conversation.raw_last_message, null, 2)}
+                            </pre>
+                          </details>
+                        </div>
+                      </article>
+                    )
+                  })}
                 </div>
               )}
             </section>
@@ -412,7 +667,10 @@ export default async function WebhookHistoryPage() {
                         {messages.map(message => (
                           <tr key={message.id} className="align-top">
                             <td className="px-4 py-4 text-gray-600">
-                              {formatDate(message.event_timestamp || message.created_at)}
+                              {formatDatabaseTimestamp(
+                                message.event_timestamp || message.created_at,
+                                { withSeconds: true }
+                              )}
                             </td>
                             <td className="px-4 py-4 text-gray-700">{message.payload_type}</td>
                             <td className="px-4 py-4 text-gray-700">{message.direction}</td>
