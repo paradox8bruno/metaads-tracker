@@ -10,6 +10,8 @@ import {
 import { sendConversionEvent } from '@/lib/meta-capi'
 import { normalizeBrazilPhone } from '@/lib/phone'
 
+const ALLOWED_EVENT_NAMES = new Set(['Purchase', 'LeadSubmitted', 'InitiateCheckout'])
+
 export async function GET() {
   try {
     await initDB()
@@ -43,6 +45,16 @@ export async function POST(req: NextRequest) {
 
     if (!Number.isFinite(value) || value <= 0) {
       return NextResponse.json({ error: 'Valor da venda é obrigatório.' }, { status: 400 })
+    }
+
+    if (!ALLOWED_EVENT_NAMES.has(eventName)) {
+      return NextResponse.json(
+        {
+          error:
+            'Tipo de evento inválido para Business Messaging. Use Purchase, LeadSubmitted ou InitiateCheckout.',
+        },
+        { status: 400 }
+      )
     }
 
     if (useTestEventCode && !process.env.META_TEST_EVENT_CODE) {

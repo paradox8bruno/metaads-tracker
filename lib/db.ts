@@ -77,6 +77,33 @@ export interface WhatsAppMessage {
   raw_payload: Record<string, unknown>
 }
 
+export interface WebhookDelivery {
+  id: string
+  created_at: string
+  source: string
+  event_type: string | null
+  outcome:
+    | 'accepted'
+    | 'accepted_empty'
+    | 'invalid_signature'
+    | 'invalid_json'
+    | 'missing_app_secret'
+    | 'processing_error'
+  signature_valid: boolean | null
+  http_method: string
+  request_headers: Record<string, unknown> | null
+  raw_body: string
+  payload: Record<string, unknown> | null
+  entry_count: number
+  change_count: number
+  conversations_upserted: number
+  message_events_stored: number
+  status_events_stored: number
+  ignored_entries: number
+  ignored_changes: number
+  error_message: string | null
+}
+
 export async function initDB() {
   await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`
 
@@ -191,6 +218,29 @@ export async function initDB() {
   await sql`
     ALTER TABLE conversions
     ADD COLUMN IF NOT EXISTS ctwa_clid TEXT
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS webhook_deliveries (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at TIMESTAMP DEFAULT now(),
+      source TEXT NOT NULL DEFAULT 'whatsapp',
+      event_type TEXT,
+      outcome TEXT NOT NULL,
+      signature_valid BOOLEAN,
+      http_method TEXT NOT NULL DEFAULT 'POST',
+      request_headers JSONB,
+      raw_body TEXT NOT NULL,
+      payload JSONB,
+      entry_count INTEGER DEFAULT 0,
+      change_count INTEGER DEFAULT 0,
+      conversations_upserted INTEGER DEFAULT 0,
+      message_events_stored INTEGER DEFAULT 0,
+      status_events_stored INTEGER DEFAULT 0,
+      ignored_entries INTEGER DEFAULT 0,
+      ignored_changes INTEGER DEFAULT 0,
+      error_message TEXT
+    )
   `
 
   return { ok: true }
@@ -315,6 +365,90 @@ export async function countWhatsAppMessages(): Promise<number> {
   `
 
   return Number(rows[0]?.count || 0)
+}
+
+export async function listWebhookDeliveries(options?: {
+  limit?: number
+}): Promise<WebhookDelivery[]> {
+  const limit = Math.max(1, Math.min(options?.limit ?? 100, 500))
+
+  const rows = await sql`
+    SELECT *
+    FROM webhook_deliveries
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `
+
+  return rows as WebhookDelivery[]
+}
+
+export async function countWebhookDeliveries(): Promise<number> {
+  const rows = await sql`
+    SELECT count(*)::int AS count
+    FROM webhook_deliveries
+  `
+
+  return Number(rows[0]?.count || 0)
+}
+
+export async function insertWebhookDelivery(data: {
+  source?: string
+  eventType?: string | null
+  outcome: WebhookDelivery['outcome']
+  signatureValid?: boolean | null
+  httpMethod?: string
+  requestHeaders?: Record<string, unknown> | null
+  rawBody: string
+  payload?: Record<string, unknown> | null
+  entryCount?: number
+  changeCount?: number
+  conversationsUpserted?: number
+  messageEventsStored?: number
+  statusEventsStored?: number
+  ignoredEntries?: number
+  ignoredChanges?: number
+  errorMessage?: string | null
+}): Promise<WebhookDelivery> {
+  const rows = await sql`
+    INSERT INTO webhook_deliveries (
+      source,
+      event_type,
+      outcome,
+      signature_valid,
+      http_method,
+      request_headers,
+      raw_body,
+      payload,
+      entry_count,
+      change_count,
+      conversations_upserted,
+      message_events_stored,
+      status_events_stored,
+      ignored_entries,
+      ignored_changes,
+      error_message
+    ) VALUES (
+      ${data.source || 'whatsapp'},
+      ${data.eventType || null},
+      ${data.outcome},
+      ${data.signatureValid ?? null},
+      ${data.httpMethod || 'POST'},
+      ${data.requestHeaders ? JSON.stringify(data.requestHeaders) : null},
+      ${data.rawBody},
+      ${data.payload ? JSON.stringify(data.payload) : null},
+      ${data.entryCount || 0},
+      ${data.changeCount || 0},
+      ${data.conversationsUpserted || 0},
+      ${data.messageEventsStored || 0},
+      ${data.statusEventsStored || 0},
+      ${data.ignoredEntries || 0},
+      ${data.ignoredChanges || 0},
+      ${data.errorMessage || null}
+    )
+    RETURNING *
+  `
+
+  return rows[0] as WebhookDelivery
 }
 
 export async function upsertWhatsAppConversationFromWebhook(data: {

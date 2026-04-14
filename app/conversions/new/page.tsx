@@ -453,10 +453,12 @@ export default function NewConversionPage() {
                     className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="Purchase">Purchase (Compra)</option>
-                    <option value="Lead">Lead</option>
+                    <option value="LeadSubmitted">LeadSubmitted</option>
                     <option value="InitiateCheckout">Início de Checkout</option>
-                    <option value="CompleteRegistration">Registro Completo</option>
                   </select>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Para Business Messaging, esta tela usa os eventos oficiais suportados pela Meta.
+                  </p>
                 </div>
               </div>
 

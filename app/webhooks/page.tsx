@@ -1,9 +1,13 @@
 import { Navbar } from '@/components/navbar'
 import {
+  countWebhookDeliveries,
   countWhatsAppConversations,
   countWhatsAppMessages,
+  initDB,
+  listWebhookDeliveries,
   listWhatsAppConversations,
   listWhatsAppMessages,
+  type WebhookDelivery,
   type WhatsAppConversation,
   type WhatsAppMessage,
 } from '@/lib/db'
@@ -56,19 +60,50 @@ function AttributionBadge({ conversation }: { conversation: WhatsAppConversation
   )
 }
 
+function OutcomeBadge({ delivery }: { delivery: WebhookDelivery }) {
+  const styleMap: Record<WebhookDelivery['outcome'], string> = {
+    accepted: 'bg-green-100 text-green-700',
+    accepted_empty: 'bg-gray-100 text-gray-700',
+    invalid_signature: 'bg-red-100 text-red-700',
+    invalid_json: 'bg-red-100 text-red-700',
+    missing_app_secret: 'bg-red-100 text-red-700',
+    processing_error: 'bg-yellow-100 text-yellow-800',
+  }
+
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${styleMap[delivery.outcome]}`}>
+      {delivery.outcome}
+    </span>
+  )
+}
+
 export default async function WebhookHistoryPage() {
+  let deliveries: WebhookDelivery[] = []
   let conversations: WhatsAppConversation[] = []
   let messages: WhatsAppMessage[] = []
+  let totalDeliveries = 0
   let totalConversations = 0
   let totalAttributed = 0
   let totalMessages = 0
   let dbError: string | null = null
 
   try {
-    ;[conversations, messages, totalConversations, totalAttributed, totalMessages] =
+    await initDB()
+
+    ;[
+      deliveries,
+      conversations,
+      messages,
+      totalDeliveries,
+      totalConversations,
+      totalAttributed,
+      totalMessages,
+    ] =
       await Promise.all([
+        listWebhookDeliveries({ limit: 100 }),
         listWhatsAppConversations(),
         listWhatsAppMessages({ limit: 100 }),
+        countWebhookDeliveries(),
         countWhatsAppConversations(),
         countWhatsAppConversations({ onlyAttributed: true }),
         countWhatsAppMessages(),
@@ -99,7 +134,13 @@ export default async function WebhookHistoryPage() {
 
         {!dbError && (
           <>
-            <div className="mb-6 grid gap-4 md:grid-cols-3">
+            <div className="mb-6 grid gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Requests do webhook
+                </p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{totalDeliveries}</p>
+              </div>
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                   Conversas recebidas
@@ -128,6 +169,103 @@ export default async function WebhookHistoryPage() {
                 no fluxo oficial de atribuição CTWA que esta aplicação exige para enviar conversão.
               </p>
             </div>
+
+            <section className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Entregas brutas do webhook</h2>
+                <p className="text-xs text-gray-500">{deliveries.length} mais recentes exibidas</p>
+              </div>
+
+              {deliveries.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                  Nenhum request do webhook salvo ainda.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {deliveries.map(delivery => (
+                    <article
+                      key={delivery.id}
+                      className="rounded-xl border border-gray-200 bg-white p-5"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-semibold text-gray-900">Webhook recebido</h3>
+                            <OutcomeBadge delivery={delivery} />
+                            <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                              assinatura {delivery.signature_valid === null ? 'n/a' : delivery.signature_valid ? 'ok' : 'inválida'}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {formatDate(delivery.created_at)} • {delivery.http_method} •{' '}
+                            {delivery.event_type || 'sem object'}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs text-gray-600 md:grid-cols-3">
+                          <div>
+                            <p className="text-gray-400">Entries</p>
+                            <p>{delivery.entry_count}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Changes</p>
+                            <p>{delivery.change_count}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Conversas</p>
+                            <p>{delivery.conversations_upserted}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Mensagens</p>
+                            <p>{delivery.message_events_stored}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Statuses</p>
+                            <p>{delivery.status_events_stored}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Ignorados</p>
+                            <p>{delivery.ignored_entries + delivery.ignored_changes}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {delivery.error_message && (
+                        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                          {delivery.error_message}
+                        </div>
+                      )}
+
+                      <div className="mt-4 space-y-2">
+                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                            Headers recebidos
+                          </summary>
+                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                            {JSON.stringify(delivery.request_headers, null, 2)}
+                          </pre>
+                        </details>
+                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                            Payload parseado
+                          </summary>
+                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                            {JSON.stringify(delivery.payload, null, 2)}
+                          </pre>
+                        </details>
+                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                            Body bruto
+                          </summary>
+                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                            {delivery.raw_body}
+                          </pre>
+                        </details>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
