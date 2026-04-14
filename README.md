@@ -2,6 +2,10 @@
 
 Aplicação Next.js para registrar conversões de vendas fechadas no WhatsApp e enviá-las ao Meta Ads pelo fluxo oficial de Business Messaging CAPI.
 
+## Documentação adicional
+
+- [Playbook 2026 de Meta Ads para Vendas no WhatsApp](</Users/brunonikel/metaads-tracker/docs/meta-ads-whatsapp-playbook-2026.md>)
+
 ## O que esta versão faz
 
 - Recebe webhooks do WhatsApp Cloud API.

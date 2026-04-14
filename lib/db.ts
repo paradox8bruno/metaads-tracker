@@ -263,6 +263,25 @@ export async function listWhatsAppConversations(options?: {
   return rows as WhatsAppConversation[]
 }
 
+export async function countWhatsAppConversations(options?: {
+  onlyAttributed?: boolean
+}): Promise<number> {
+  const onlyAttributed = options?.onlyAttributed ?? false
+
+  const rows = onlyAttributed
+    ? await sql`
+        SELECT count(*)::int AS count
+        FROM whatsapp_conversations
+        WHERE ctwa_clid IS NOT NULL
+      `
+    : await sql`
+        SELECT count(*)::int AS count
+        FROM whatsapp_conversations
+      `
+
+  return Number(rows[0]?.count || 0)
+}
+
 export async function getWhatsAppConversation(id: string): Promise<WhatsAppConversation | null> {
   const rows = await sql`
     SELECT *
@@ -272,6 +291,30 @@ export async function getWhatsAppConversation(id: string): Promise<WhatsAppConve
   `
 
   return (rows[0] as WhatsAppConversation) || null
+}
+
+export async function listWhatsAppMessages(options?: {
+  limit?: number
+}): Promise<WhatsAppMessage[]> {
+  const limit = Math.max(1, Math.min(options?.limit ?? 100, 500))
+
+  const rows = await sql`
+    SELECT *
+    FROM whatsapp_messages
+    ORDER BY event_timestamp DESC NULLS LAST, created_at DESC
+    LIMIT ${limit}
+  `
+
+  return rows as WhatsAppMessage[]
+}
+
+export async function countWhatsAppMessages(): Promise<number> {
+  const rows = await sql`
+    SELECT count(*)::int AS count
+    FROM whatsapp_messages
+  `
+
+  return Number(rows[0]?.count || 0)
 }
 
 export async function upsertWhatsAppConversationFromWebhook(data: {
