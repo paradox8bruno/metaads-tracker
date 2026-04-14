@@ -7,8 +7,8 @@ const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
 export interface ConversionEventData {
   eventId: string
   eventName: string
-  value: number
-  currency: string
+  value?: number
+  currency?: string
   customerPhone?: string
   customerEmail?: string
   customerName?: string
@@ -182,11 +182,6 @@ export async function sendConversionEvent(
     userData.em = hashEmail(data.customerEmail)
   }
 
-  const customData: Record<string, unknown> = {
-    value: data.value,
-    currency: data.currency,
-  }
-
   const eventPayload: Record<string, unknown> = {
     event_name: data.eventName,
     event_time: eventTime,
@@ -194,7 +189,13 @@ export async function sendConversionEvent(
     action_source: 'business_messaging',
     messaging_channel: 'whatsapp',
     user_data: userData,
-    custom_data: customData,
+  }
+
+  if (typeof data.value === 'number' && Number.isFinite(data.value) && data.currency) {
+    eventPayload.custom_data = {
+      value: data.value,
+      currency: data.currency,
+    }
   }
 
   const body: Record<string, unknown> = {

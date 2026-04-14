@@ -290,6 +290,17 @@ export async function getConversion(id: string): Promise<Conversion | null> {
   return (rows[0] as Conversion) || null
 }
 
+export async function getConversionBySourceRef(sourceRef: string): Promise<Conversion | null> {
+  const rows = await sql`
+    SELECT *
+    FROM conversions
+    WHERE source_ref = ${sourceRef}
+    LIMIT 1
+  `
+
+  return (rows[0] as Conversion) || null
+}
+
 export async function listWhatsAppConversations(options?: {
   onlyAttributed?: boolean
 }): Promise<WhatsAppConversation[]> {

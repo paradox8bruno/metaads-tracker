@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import {
+  getConversionBySourceRef,
   initDB,
+  insertConversion,
   insertWebhookDelivery,
+  updateConversionMetaStatus,
   upsertWhatsAppConversationFromWebhook,
   upsertWhatsAppMessage,
 } from '@/lib/db'
+import { sendConversionEvent } from '@/lib/meta-capi'
 import {
   extractDigits,
   parseWebhookTimestamp,
@@ -117,6 +122,71 @@ function getReferralMedia(referral?: WebhookReferral): { type: string | null; id
   }
 
   return { type: null, id: null }
+}
+
+async function ensureAutomaticLeadSubmitted(params: {
+  conversationId: string
+  wabaId: string
+  ctwaClid: string
+  customerName: string | null
+  customerPhone: string | null
+}) {
+  const sourceRef = `auto-lead:${params.conversationId}`
+  const existing = await getConversionBySourceRef(sourceRef)
+
+  if (existing?.meta_status === 'sent') {
+    return
+  }
+
+  const conversion =
+    existing ||
+    (await insertConversion({
+      customerName: params.customerName || undefined,
+      customerPhone: params.customerPhone || undefined,
+      value: 0,
+      currency: 'BRL',
+      eventId: randomUUID(),
+      eventName: 'LeadSubmitted',
+      source: 'whatsapp',
+      whatsappConversationId: params.conversationId,
+      ctwaClid: params.ctwaClid,
+      sourceRef,
+    }))
+
+  let metaStatus: 'sent' | 'error' = 'sent'
+  let metaResponse: Record<string, unknown>
+  let metaEventPayload: Record<string, unknown> | null = null
+  let datasetId: string | null = null
+
+  try {
+    const result = await sendConversionEvent({
+      eventId: conversion.event_id,
+      eventName: 'LeadSubmitted',
+      customerPhone: params.customerPhone || undefined,
+      customerName: params.customerName || undefined,
+      conversation: {
+        waba_id: params.wabaId,
+        ctwa_clid: params.ctwaClid,
+      },
+    })
+
+    datasetId = result.datasetId
+    metaResponse = result.response
+    metaEventPayload = result.eventPayload
+
+    if (result.response.error) {
+      metaStatus = 'error'
+    }
+  } catch (error) {
+    metaStatus = 'error'
+    metaResponse = { error: String(error) }
+  }
+
+  await updateConversionMetaStatus(conversion.id, metaStatus, metaResponse, {
+    datasetId,
+    ctwaClid: params.ctwaClid,
+    metaEventPayload,
+  })
 }
 
 export async function GET(req: NextRequest) {
@@ -321,6 +391,16 @@ export async function POST(req: NextRequest) {
           })
 
           messageEventsStored += 1
+
+          if (conversation.ctwa_clid) {
+            await ensureAutomaticLeadSubmitted({
+              conversationId: conversation.id,
+              wabaId,
+              ctwaClid: conversation.ctwa_clid,
+              customerName: conversation.customer_name,
+              customerPhone: conversation.customer_phone,
+            })
+          }
         }
 
         for (const status of value.statuses || []) {

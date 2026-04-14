@@ -11,6 +11,7 @@ Aplicação Next.js para registrar conversões de vendas fechadas no WhatsApp e 
 - Recebe webhooks do WhatsApp Cloud API.
 - Captura `ctwa_clid` do objeto `referral` quando o lead veio de anúncio Click to WhatsApp.
 - Persiste conversa, mensagens e status no Postgres.
+- Envia `LeadSubmitted` automaticamente quando a conversa atribuída é iniciada.
 - Cria ou reutiliza o `dataset_id` do WABA.
 - Envia conversões ao Meta com `action_source=business_messaging` e `messaging_channel=whatsapp`.
 
@@ -105,9 +106,10 @@ Se deixar vazio, a app tenta localizar ou criar o dataset do WABA via Graph API 
 1. O usuário clica no anúncio Click to WhatsApp.
 2. O usuário envia mensagem no WhatsApp.
 3. O webhook recebe o payload e salva a conversa com `ctwa_clid`.
-4. A tela `/conversions/new` lista apenas conversas com `ctwa_clid`.
-5. Você registra a venda vinculando a conversa correta.
-6. A API envia a conversão ao dataset do Business Messaging.
+4. A API envia `LeadSubmitted` automaticamente para a conversa atribuída.
+5. A tela `/conversions/new` lista apenas conversas com `ctwa_clid`.
+6. Você registra a venda vinculando a conversa correta.
+7. A API envia o `Purchase` ao dataset do Business Messaging.
 
 ## Desenvolvimento local
 
@@ -132,6 +134,7 @@ npm run build
 ## Observações importantes
 
 - Sem `ctwa_clid`, a conversa não entra no fluxo oficial de atribuição CTWA.
+- O `LeadSubmitted` automático só é enviado uma vez por conversa atribuída e tenta reenviar se o último envio tiver falhado.
 - A tela de nova venda não usa mais `fbclid` manual.
 - `META_TEST_EVENT_CODE` é opcional e só deve ser usado quando você marcar o envio como teste na tela de nova venda.
 - Não salve tokens reais no repositório.
