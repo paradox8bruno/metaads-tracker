@@ -7,9 +7,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'APP_SECRET não configurada.' }, { status: 500 })
   }
 
-  const { password } = await req.json()
+  let body: { password?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Corpo da requisição inválido.' }, { status: 400 })
+  }
 
-  if (password !== APP_SECRET) {
+  const { password } = body
+
+  if (typeof password !== 'string' || password !== APP_SECRET) {
     return NextResponse.json({ error: 'Senha incorreta' }, { status: 401 })
   }
 

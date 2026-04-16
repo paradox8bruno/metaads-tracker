@@ -104,7 +104,12 @@ export interface WebhookDelivery {
   error_message: string | null
 }
 
+// Flag de módulo: evita rodar DDL em cada request dentro do mesmo processo
+let dbReady = false
+
 export async function initDB() {
+  if (dbReady) return { ok: true }
+
   await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`
 
   await sql`
@@ -243,6 +248,7 @@ export async function initDB() {
     )
   `
 
+  dbReady = true
   return { ok: true }
 }
 

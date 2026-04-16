@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const APP_SECRET = process.env.APP_SECRET
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -18,7 +16,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (!APP_SECRET) {
+  // Lido dentro da função para funcionar corretamente com testes e Edge Runtime
+  const appSecret = process.env.APP_SECRET
+
+  if (!appSecret) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'APP_SECRET não configurada.' }, { status: 500 })
     }
@@ -31,7 +32,7 @@ export function proxy(request: NextRequest) {
 
   const session = request.cookies.get('session')?.value
 
-  if (session !== APP_SECRET) {
+  if (session !== appSecret) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
