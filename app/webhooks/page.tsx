@@ -41,50 +41,34 @@ function formatEventLabel(message: WhatsAppMessage) {
 
 function AttributionBadge({ conversation }: { conversation: WhatsAppConversation }) {
   if (conversation.ctwa_clid) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-        CTWA atribuído
-      </span>
-    )
+    return <span className="tag bg-[var(--success-soft)] text-[var(--success)]">CTWA atribuído</span>
   }
 
-  return (
-    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
-      Sem CTWA
-    </span>
-  )
+  return <span className="tag bg-[var(--warning-soft)] text-[var(--warning)]">Sem CTWA</span>
 }
 
 function OutcomeBadge({ delivery }: { delivery: WebhookDelivery }) {
   const styleMap: Record<WebhookDelivery['outcome'], string> = {
-    accepted: 'bg-green-100 text-green-700',
-    accepted_empty: 'bg-gray-100 text-gray-700',
-    invalid_signature: 'bg-red-100 text-red-700',
-    invalid_json: 'bg-red-100 text-red-700',
-    missing_app_secret: 'bg-red-100 text-red-700',
-    processing_error: 'bg-yellow-100 text-yellow-800',
+    accepted: 'bg-[var(--success-soft)] text-[var(--success)]',
+    accepted_empty: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+    invalid_signature: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    invalid_json: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    missing_app_secret: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    processing_error: 'bg-[var(--warning-soft)] text-[var(--warning)]',
   }
 
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${styleMap[delivery.outcome]}`}>
-      {delivery.outcome}
-    </span>
-  )
+  return <span className={`tag ${styleMap[delivery.outcome]}`}>{delivery.outcome}</span>
 }
 
 function LeadStatusBadge({ conversion }: { conversion?: Conversion }) {
   if (!conversion) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-        Sem lead enviado
-      </span>
-    )
+    return <span className="tag bg-[rgba(36,50,71,0.08)] text-[#243247]">Sem lead enviado</span>
   }
 
   const styles = {
-    sent: 'bg-green-100 text-green-700',
-    error: 'bg-red-100 text-red-700',
-    pending: 'bg-yellow-100 text-yellow-800',
+    sent: 'bg-[var(--success-soft)] text-[var(--success)]',
+    error: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    pending: 'bg-[var(--warning-soft)] text-[var(--warning)]',
   }[conversion.meta_status]
 
   const labels = {
@@ -93,11 +77,7 @@ function LeadStatusBadge({ conversion }: { conversion?: Conversion }) {
     pending: 'Lead pendente',
   }[conversion.meta_status]
 
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${styles}`}>
-      {labels}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{labels}</span>
 }
 
 function SignatureBadge({ delivery }: { delivery: WebhookDelivery }) {
@@ -110,15 +90,32 @@ function SignatureBadge({ delivery }: { delivery: WebhookDelivery }) {
 
   const className =
     delivery.signature_valid === null
-      ? 'bg-gray-100 text-gray-700'
+      ? 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
       : delivery.signature_valid
-        ? 'bg-blue-100 text-blue-700'
-        : 'bg-red-100 text-red-700'
+        ? 'bg-[var(--info-soft)] text-[var(--info)]'
+        : 'bg-[var(--danger-soft)] text-[var(--danger)]'
 
+  return <span className={`tag ${className}`}>{label}</span>
+}
+
+function DataField({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+}) {
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${className}`}>
-      {label}
-    </span>
+    <div>
+      <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+        {label}
+      </p>
+      <p className={`mt-2 text-sm text-[#243247] ${mono ? 'break-all font-mono text-xs' : ''}`}>
+        {value}
+      </p>
+    </div>
   )
 }
 
@@ -180,7 +177,6 @@ export default async function WebhookHistoryPage() {
     dbError = String(error)
   }
 
-  const totalUnattributed = Math.max(0, totalConversations - totalAttributed)
   const totalLeadPending = Math.max(0, totalLeadCreated - totalLeadSent - totalLeadError)
 
   const leadByConversationId = new Map<string, Conversion>()
@@ -191,188 +187,156 @@ export default async function WebhookHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-page min-h-screen">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Histórico do webhook</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Auditoria completa do que entrou pelo webhook do WhatsApp: requests brutos, conversas,
-            mensagens, atribuição CTWA e o lead automático enviado ao Meta.
-          </p>
-        </div>
+      <main className="page-wrap py-8">
+        <section className="page-header">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <div className="page-kicker">Webhook Intelligence</div>
+              <h1 className="page-title mt-4">Tudo que o WhatsApp entregou, sem caixa-preta.</h1>
+              <p className="page-subtitle mt-4">
+                Esta tela é a base de auditoria do projeto: requests brutos, mensagens, echoes,
+                automatic events, tracking events, conversas persistidas e os leads automáticos
+                gerados para o Meta.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/conversions" className="cta-secondary px-5 py-3 text-sm">
+                Abrir conversões
+              </Link>
+              <Link href="/conversions/new" className="cta-primary px-5 py-3 text-sm">
+                Registrar venda
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {dbError && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-sm font-medium text-red-800">Erro ao carregar histórico</p>
-            <p className="mt-1 text-xs text-red-700">{dbError}</p>
+          <div className="section-card mb-6 border border-[rgba(180,35,24,0.16)] bg-[var(--danger-soft)] p-5">
+            <p className="text-sm font-semibold text-[var(--danger)]">Erro ao carregar histórico</p>
+            <p className="mt-1 text-xs text-[var(--foreground-soft)]">{dbError}</p>
           </div>
         )}
 
         {!dbError && (
           <>
-            <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Requests do webhook
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{totalDeliveries}</p>
+            <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <div className="metric-card p-5">
+                <p className="metric-label">Requests</p>
+                <p className="metric-value">{totalDeliveries}</p>
+                <p className="metric-note">Entradas brutas do webhook.</p>
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Eventos recebidos
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{totalMessages}</p>
+              <div className="metric-card p-5">
+                <p className="metric-label">Eventos</p>
+                <p className="metric-value">{totalMessages}</p>
+                <p className="metric-note">Mensagens, status e echoes persistidos.</p>
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Eventos extras
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{totalTopicEvents}</p>
-                <p className="mt-1 text-xs text-gray-500">
+              <div className="metric-card p-5">
+                <p className="metric-label">Extras</p>
+                <p className="metric-value">{totalTopicEvents}</p>
+                <p className="metric-note">
                   {totalAutomaticEvents} automáticos • {totalTrackingEvents} tracking
                 </p>
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Conversas recebidas
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{totalConversations}</p>
+              <div className="metric-card p-5">
+                <p className="metric-label">Conversas</p>
+                <p className="metric-value">{totalConversations}</p>
+                <p className="metric-note">{totalAttributed} com CTWA válido.</p>
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Conversas com CTWA
+              <div className="metric-card p-5">
+                <p className="metric-label">Leads</p>
+                <p className="metric-value">{totalLeadCreated}</p>
+                <p className="metric-note">
+                  {totalLeadSent} enviados • {totalLeadPending} pendentes • {totalLeadError} erro
                 </p>
-                <p className="mt-1 text-2xl font-bold text-green-600">{totalAttributed}</p>
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Conversas sem CTWA
-                </p>
-                <p className="mt-1 text-2xl font-bold text-yellow-700">{totalUnattributed}</p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Leads automáticos
-                </p>
-                <p className="mt-1 text-2xl font-bold text-blue-700">{totalLeadCreated}</p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Leads enviados
-                </p>
-                <p className="mt-1 text-2xl font-bold text-green-600">{totalLeadSent}</p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Leads com erro
-                </p>
-                <p className="mt-1 text-2xl font-bold text-red-600">{totalLeadError}</p>
-              </div>
-            </div>
+            </section>
 
-            <div className="mb-8 rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <p className="text-sm font-medium text-blue-900">Leitura operacional</p>
-              <p className="mt-1 text-sm text-blue-800">
-                Quando a conversa chega com <code className="rounded bg-blue-100 px-1 py-0.5">ctwa_clid</code>,
-                o sistema registra a conversa, grava o request bruto e cria o evento{' '}
-                <code className="rounded bg-blue-100 px-1 py-0.5">LeadSubmitted</code>{' '}
-                automaticamente. Quando a conversa chega sem CTWA, ela continua aparecendo aqui
-                para auditoria e debug, mas não entra no fluxo oficial de atribuição do Meta.
+            <section className="section-card surface mb-8 p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                Leitura operacional
               </p>
-              <p className="mt-2 text-xs text-blue-700">
-                Leads pendentes: <span className="font-semibold">{totalLeadPending}</span> •
-                Leads exibidos na tabela: <span className="font-semibold">{leadConversions.length}</span>
+              <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
+                Quando a conversa chega com{' '}
+                <code className="rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                  ctwa_clid
+                </code>
+                , o sistema registra a conversa, preserva o request bruto e cria{' '}
+                <code className="rounded bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">
+                  LeadSubmitted
+                </code>{' '}
+                automaticamente. Se a conversa chega sem CTWA, ela continua disponível aqui para
+                debug e auditoria, mas não entra no fluxo oficial de atribuição.
               </p>
-            </div>
+            </section>
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Leads automáticos enviados</h2>
-                  <p className="text-xs text-gray-500">
-                    Conversas atribuídas que geraram <code>LeadSubmitted</code>.
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Auto leads
                   </p>
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                    Leads automáticos enviados
+                  </h2>
                 </div>
-                <Link
-                  href="/conversions"
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                >
-                  Ver todas as conversões →
+                <Link href="/conversions" className="text-sm font-semibold text-[var(--info)] hover:text-[#173f84]">
+                  Ver conversões →
                 </Link>
               </div>
 
               {leadConversions.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                <div className="section-card surface p-8 text-sm text-[var(--foreground-soft)]">
                   Nenhum lead automático registrado ainda.
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div className="section-card surface overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1100px] text-sm">
+                    <table className="data-table min-w-[1100px]">
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Data
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Cliente
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Telefone
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Conversa
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            CTWA CLID
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Status Meta
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Detalhes
-                          </th>
+                        <tr>
+                          <th>Data</th>
+                          <th>Cliente</th>
+                          <th>Telefone</th>
+                          <th>Conversa</th>
+                          <th>CTWA CLID</th>
+                          <th>Status Meta</th>
+                          <th className="text-right">Detalhes</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody>
                         {leadConversions.map(conversion => (
-                          <tr key={conversion.id} className="align-top">
-                            <td className="px-4 py-4 text-gray-600">
-                              {formatDatabaseTimestamp(conversion.created_at, {
-                                withSeconds: true,
-                              })}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="font-medium text-gray-900">
+                          <tr key={conversion.id}>
+                            <td>{formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}</td>
+                            <td>
+                              <div className="font-semibold text-[#162233]">
                                 {conversion.customer_name || 'Lead sem nome'}
                               </div>
-                              <div className="mt-1 font-mono text-[11px] text-gray-400">
+                              <div className="mt-1 font-mono text-[11px] text-[var(--foreground-muted)]">
                                 {conversion.source_ref || 'sem source_ref'}
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-gray-600">
-                              {formatConversationPhone(conversion.customer_phone)}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="font-mono text-xs text-gray-600">
+                            <td>{formatConversationPhone(conversion.customer_phone)}</td>
+                            <td>
+                              <div className="font-mono text-xs text-[#243247]">
                                 {conversion.whatsapp_conversation_id || '—'}
                               </div>
                               {conversion.whatsapp_conversation_id && (
-                                <div className="mt-1 text-xs text-gray-400">
+                                <div className="mt-1 text-xs text-[var(--foreground-muted)]">
                                   Origem: {conversion.source}
                                 </div>
                               )}
                             </td>
-                            <td className="px-4 py-4">
-                              <div className="max-w-xs break-all font-mono text-xs text-gray-600">
+                            <td>
+                              <div className="max-w-xs break-all font-mono text-xs text-[#243247]">
                                 {conversion.ctwa_clid || '—'}
                               </div>
                             </td>
-                            <td className="px-4 py-4">
+                            <td>
                               <LeadStatusBadge conversion={conversion} />
-                              <div className="mt-1 text-xs text-gray-400">
+                              <div className="mt-2 text-xs text-[var(--foreground-muted)]">
                                 {conversion.meta_sent_at
                                   ? `Meta: ${formatDatabaseTimestamp(conversion.meta_sent_at, {
                                       withSeconds: true,
@@ -380,10 +344,10 @@ export default async function WebhookHistoryPage() {
                                   : 'Ainda sem confirmação de envio'}
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-right">
+                            <td className="text-right">
                               <Link
                                 href={`/conversions/${conversion.id}`}
-                                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                                className="font-semibold text-[var(--info)] hover:text-[#173f84]"
                               >
                                 Abrir →
                               </Link>
@@ -399,105 +363,77 @@ export default async function WebhookHistoryPage() {
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Entregas brutas do webhook</h2>
-                <p className="text-xs text-gray-500">{deliveries.length} mais recentes exibidas</p>
+                <div>
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Raw ingress
+                  </p>
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                    Entregas brutas do webhook
+                  </h2>
+                </div>
+                <p className="text-xs text-[var(--foreground-muted)]">{deliveries.length} mais recentes exibidas</p>
               </div>
 
               {deliveries.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                <div className="section-card surface p-8 text-sm text-[var(--foreground-soft)]">
                   Nenhum request do webhook salvo ainda.
                 </div>
               ) : (
                 <div className="space-y-4">
                   {deliveries.map(delivery => (
-                    <article
-                      key={delivery.id}
-                      className="rounded-xl border border-gray-200 bg-white p-5"
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <article key={delivery.id} className="section-card surface p-5">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">Webhook recebido</h3>
+                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                              Webhook recebido
+                            </h3>
                             <OutcomeBadge delivery={delivery} />
                             <SignatureBadge delivery={delivery} />
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
-                            {formatDatabaseTimestamp(delivery.created_at, {
-                              withSeconds: true,
-                            })}{' '}
-                            • {delivery.http_method} • {delivery.event_type || 'sem object'}
+                          <p className="mt-2 text-sm text-[var(--foreground-soft)]">
+                            {formatDatabaseTimestamp(delivery.created_at, { withSeconds: true })} •{' '}
+                            {delivery.http_method} • {delivery.event_type || 'sem object'}
                           </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs text-gray-600 md:grid-cols-3">
-                          <div>
-                            <p className="text-gray-400">Entries</p>
-                            <p>{delivery.entry_count}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Changes</p>
-                            <p>{delivery.change_count}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Conversas</p>
-                            <p>{delivery.conversations_upserted}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Mensagens</p>
-                            <p>{delivery.message_events_stored}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Echoes</p>
-                            <p>{delivery.echo_events_stored}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Statuses</p>
-                            <p>{delivery.status_events_stored}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Automatic</p>
-                            <p>{delivery.automatic_events_stored}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Tracking</p>
-                            <p>{delivery.tracking_events_stored}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Ignorados</p>
-                            <p>{delivery.ignored_entries + delivery.ignored_changes}</p>
-                          </div>
+
+                        <div className="grid gap-4 md:grid-cols-3 xl:min-w-[420px]">
+                          <DataField label="Entries" value={String(delivery.entry_count)} />
+                          <DataField label="Changes" value={String(delivery.change_count)} />
+                          <DataField label="Conversas" value={String(delivery.conversations_upserted)} />
+                          <DataField label="Mensagens" value={String(delivery.message_events_stored)} />
+                          <DataField label="Echoes" value={String(delivery.echo_events_stored)} />
+                          <DataField label="Statuses" value={String(delivery.status_events_stored)} />
+                          <DataField label="Automatic" value={String(delivery.automatic_events_stored)} />
+                          <DataField label="Tracking" value={String(delivery.tracking_events_stored)} />
+                          <DataField label="Ignorados" value={String(delivery.ignored_entries + delivery.ignored_changes)} />
                         </div>
                       </div>
 
                       {delivery.error_message && (
-                        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <div className="mt-4 rounded-2xl border border-[rgba(180,35,24,0.16)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]">
                           {delivery.error_message}
                         </div>
                       )}
 
-                      <div className="mt-4 space-y-2">
-                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                      <div className="mt-4 space-y-3">
+                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                             Headers recebidos
                           </summary>
-                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                            {JSON.stringify(delivery.request_headers, null, 2)}
-                          </pre>
+                          <pre className="code-block mt-3">{JSON.stringify(delivery.request_headers, null, 2)}</pre>
                         </details>
-                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                             Payload parseado
                           </summary>
-                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                            {JSON.stringify(delivery.payload, null, 2)}
-                          </pre>
+                          <pre className="code-block mt-3">{JSON.stringify(delivery.payload, null, 2)}</pre>
                         </details>
-                        <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                             Body bruto
                           </summary>
-                          <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                            {delivery.raw_body}
-                          </pre>
+                          <pre className="code-block mt-3">{delivery.raw_body}</pre>
                         </details>
                       </div>
                     </article>
@@ -508,63 +444,59 @@ export default async function WebhookHistoryPage() {
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Automatic e Tracking Events
-                </h2>
-                <p className="text-xs text-gray-500">{topicEvents.length} mais recentes exibidos</p>
+                <div>
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Extra topics
+                  </p>
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                    Automatic e tracking events
+                  </h2>
+                </div>
+                <p className="text-xs text-[var(--foreground-muted)]">{topicEvents.length} mais recentes exibidos</p>
               </div>
 
               {topicEvents.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                <div className="section-card surface p-8 text-sm text-[var(--foreground-soft)]">
                   Nenhum evento extra de webhook salvo ainda.
                 </div>
               ) : (
                 <div className="space-y-4">
                   {topicEvents.map(event => (
-                    <article key={event.id} className="rounded-xl border border-gray-200 bg-white p-5">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <article key={event.id} className="section-card surface p-5">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
                               {event.event_name || event.field}
                             </h3>
-                            <span className="inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                            <span className="tag bg-[var(--info-soft)] text-[var(--info)]">
                               {event.field}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-2 text-sm text-[var(--foreground-soft)]">
                             {formatDatabaseTimestamp(event.created_at, { withSeconds: true })}
                           </p>
                         </div>
-                        <div className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-gray-600 md:grid-cols-3">
-                          <div>
-                            <p className="text-gray-400">WA ID</p>
-                            <p className="break-all font-mono">{event.wa_id || '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Phone Number ID</p>
-                            <p className="break-all font-mono">{event.phone_number_id || '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Event time</p>
-                            <p>
-                              {event.event_timestamp
-                                ? formatDatabaseTimestamp(event.event_timestamp, {
-                                    withSeconds: true,
-                                  })
-                                : '—'}
-                            </p>
-                          </div>
+
+                        <div className="grid gap-4 md:grid-cols-3 xl:min-w-[480px]">
+                          <DataField label="WA ID" value={event.wa_id || '—'} mono />
+                          <DataField label="Phone Number ID" value={event.phone_number_id || '—'} mono />
+                          <DataField
+                            label="Event time"
+                            value={
+                              event.event_timestamp
+                                ? formatDatabaseTimestamp(event.event_timestamp, { withSeconds: true })
+                                : '—'
+                            }
+                          />
                         </div>
                       </div>
 
-                      <details className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                        <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                      <details className="mt-4 rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                        <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                           Payload bruto
                         </summary>
-                        <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                          {JSON.stringify(event.raw_payload, null, 2)}
-                        </pre>
+                        <pre className="code-block mt-3">{JSON.stringify(event.raw_payload, null, 2)}</pre>
                       </details>
                     </article>
                   ))}
@@ -574,14 +506,19 @@ export default async function WebhookHistoryPage() {
 
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Conversas recebidas</h2>
-                <p className="text-xs text-gray-500">
-                  {conversations.length} mais recentes exibidas
-                </p>
+                <div>
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Conversations
+                  </p>
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                    Conversas recebidas
+                  </h2>
+                </div>
+                <p className="text-xs text-[var(--foreground-muted)]">{conversations.length} mais recentes exibidas</p>
               </div>
 
               {conversations.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                <div className="section-card surface p-8 text-sm text-[var(--foreground-soft)]">
                   Nenhuma conversa recebida ainda.
                 </div>
               ) : (
@@ -590,109 +527,66 @@ export default async function WebhookHistoryPage() {
                     const leadConversion = leadByConversationId.get(conversation.id)
 
                     return (
-                      <article
-                        key={conversation.id}
-                        className="rounded-xl border border-gray-200 bg-white p-5"
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <article key={conversation.id} className="section-card surface p-5">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-semibold text-gray-900">
+                              <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
                                 {conversation.customer_name || 'Lead sem nome'}
                               </h3>
                               <AttributionBadge conversation={conversation} />
                               <LeadStatusBadge conversion={leadConversion} />
                             </div>
-                            <p className="mt-1 text-sm text-gray-600">
+                            <p className="mt-2 text-sm text-[var(--foreground-soft)]">
                               {formatConversationPhone(conversation.customer_phone)}
                             </p>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            Atualizado em{' '}
-                            {formatDatabaseTimestamp(conversation.updated_at, {
+                          <div className="text-xs text-[var(--foreground-muted)]">
+                            Atualizado em {formatDatabaseTimestamp(conversation.updated_at, { withSeconds: true })}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                          <DataField label="WA ID" value={conversation.wa_id} mono />
+                          <DataField
+                            label="Número Business"
+                            value={conversation.display_phone_number || conversation.phone_number_id || '—'}
+                            mono
+                          />
+                          <DataField label="CTWA CLID" value={conversation.ctwa_clid || '—'} mono />
+                          <DataField label="Última mensagem" value={conversation.latest_message_text || '—'} />
+                          <DataField
+                            label="Criada em"
+                            value={formatDatabaseTimestamp(conversation.created_at, { withSeconds: true })}
+                          />
+                          <DataField
+                            label="Último evento"
+                            value={formatDatabaseTimestamp(conversation.latest_message_at || conversation.updated_at, {
                               withSeconds: true,
                             })}
-                          </div>
+                          />
+                          <DataField label="Tipo de referral" value={conversation.referral_source_type || '—'} />
+                          <DataField label="Headline do anúncio" value={conversation.referral_headline || '—'} />
                         </div>
 
-                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                          <DataField label="URL de origem" value={conversation.referral_source_url || '—'} />
                           <div>
-                            <p className="text-xs text-gray-400">WA ID</p>
-                            <p className="break-all font-mono text-xs text-gray-700">
-                              {conversation.wa_id}
+                            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                              Lead automático vinculado
                             </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Número WhatsApp Business</p>
-                            <p className="break-all font-mono text-xs text-gray-700">
-                              {conversation.display_phone_number ||
-                                conversation.phone_number_id ||
-                                '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">CTWA CLID</p>
-                            <p className="break-all font-mono text-xs text-gray-700">
-                              {conversation.ctwa_clid || '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Última mensagem</p>
-                            <p className="text-gray-700">{conversation.latest_message_text || '—'}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-                          <div>
-                            <p className="text-xs text-gray-400">Criada em</p>
-                            <p className="text-gray-700">
-                              {formatDatabaseTimestamp(conversation.created_at, {
-                                withSeconds: true,
-                              })}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Último evento</p>
-                            <p className="text-gray-700">
-                              {formatDatabaseTimestamp(
-                                conversation.latest_message_at || conversation.updated_at,
-                                { withSeconds: true }
-                              )}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Tipo de referral</p>
-                            <p className="text-gray-700">{conversation.referral_source_type || '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Headline do anúncio</p>
-                            <p className="text-gray-700">{conversation.referral_headline || '—'}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
-                          <div>
-                            <p className="text-xs text-gray-400">URL de origem</p>
-                            <p className="break-all text-gray-700">
-                              {conversation.referral_source_url || '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Lead automático vinculado</p>
                             {leadConversion ? (
-                              <div>
-                                <p className="font-mono text-xs text-gray-700">
-                                  {leadConversion.id}
-                                </p>
+                              <div className="mt-2">
+                                <p className="font-mono text-xs text-[#243247]">{leadConversion.id}</p>
                                 <Link
                                   href={`/conversions/${leadConversion.id}`}
-                                  className="mt-1 inline-flex text-xs font-medium text-blue-600 hover:text-blue-700"
+                                  className="mt-2 inline-flex text-sm font-semibold text-[var(--info)] hover:text-[#173f84]"
                                 >
                                   Abrir conversão →
                                 </Link>
                               </div>
                             ) : (
-                              <p className="text-gray-700">
+                              <p className="mt-2 text-sm text-[var(--foreground-soft)]">
                                 {conversation.ctwa_clid
                                   ? 'Ainda não há lead automático vinculado.'
                                   : 'Não se aplica: conversa sem CTWA.'}
@@ -701,22 +595,18 @@ export default async function WebhookHistoryPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 space-y-2">
-                          <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                            <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                        <div className="mt-4 space-y-3">
+                          <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                            <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                               Referral bruto
                             </summary>
-                            <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                              {JSON.stringify(conversation.raw_referral, null, 2)}
-                            </pre>
+                            <pre className="code-block mt-3">{JSON.stringify(conversation.raw_referral, null, 2)}</pre>
                           </details>
-                          <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                            <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                          <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+                            <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
                               Última mensagem bruta
                             </summary>
-                            <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                              {JSON.stringify(conversation.raw_last_message, null, 2)}
-                            </pre>
+                            <pre className="code-block mt-3">{JSON.stringify(conversation.raw_last_message, null, 2)}</pre>
                           </details>
                         </div>
                       </article>
@@ -728,69 +618,55 @@ export default async function WebhookHistoryPage() {
 
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Eventos do webhook</h2>
-                <p className="text-xs text-gray-500">{messages.length} mais recentes exibidos</p>
+                <div>
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Event stream
+                  </p>
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                    Eventos do webhook
+                  </h2>
+                </div>
+                <p className="text-xs text-[var(--foreground-muted)]">{messages.length} mais recentes exibidos</p>
               </div>
 
               {messages.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                <div className="section-card surface p-8 text-sm text-[var(--foreground-soft)]">
                   Nenhum evento recebido ainda.
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div className="section-card surface overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] text-sm">
+                    <table className="data-table min-w-[900px]">
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Data
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Tipo
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Direção
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            WA ID
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Evento
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Texto
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                            Payload
-                          </th>
+                        <tr>
+                          <th>Data</th>
+                          <th>Tipo</th>
+                          <th>Direção</th>
+                          <th>WA ID</th>
+                          <th>Evento</th>
+                          <th>Texto</th>
+                          <th>Payload</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody>
                         {messages.map(message => (
-                          <tr key={message.id} className="align-top">
-                            <td className="px-4 py-4 text-gray-600">
-                              {formatDatabaseTimestamp(
-                                message.event_timestamp || message.created_at,
-                                { withSeconds: true }
-                              )}
+                          <tr key={message.id}>
+                            <td>
+                              {formatDatabaseTimestamp(message.event_timestamp || message.created_at, {
+                                withSeconds: true,
+                              })}
                             </td>
-                            <td className="px-4 py-4 text-gray-700">{message.payload_type}</td>
-                            <td className="px-4 py-4 text-gray-700">{message.direction}</td>
-                            <td className="px-4 py-4 font-mono text-xs text-gray-600">
-                              {message.wa_id || '—'}
-                            </td>
-                            <td className="px-4 py-4 text-gray-700">{formatEventLabel(message)}</td>
-                            <td className="max-w-sm px-4 py-4 text-gray-700">
-                              {message.message_text || '—'}
-                            </td>
-                            <td className="px-4 py-4">
-                              <details className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                                <summary className="cursor-pointer text-xs font-medium text-gray-700">
+                            <td>{message.payload_type}</td>
+                            <td>{message.direction}</td>
+                            <td className="font-mono text-xs text-[#243247]">{message.wa_id || '—'}</td>
+                            <td>{formatEventLabel(message)}</td>
+                            <td className="max-w-sm">{message.message_text || '—'}</td>
+                            <td>
+                              <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-3">
+                                <summary className="cursor-pointer text-xs font-semibold text-[#243247]">
                                   Ver JSON
                                 </summary>
-                                <pre className="mt-2 max-w-md overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
-                                  {JSON.stringify(message.raw_payload, null, 2)}
-                                </pre>
+                                <pre className="code-block mt-3 max-w-md">{JSON.stringify(message.raw_payload, null, 2)}</pre>
                               </details>
                             </td>
                           </tr>

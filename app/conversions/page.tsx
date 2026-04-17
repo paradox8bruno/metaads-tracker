@@ -11,10 +11,10 @@ import { formatBrazilPhone } from '@/lib/phone'
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
-    sent: 'bg-green-100 text-green-700',
-    error: 'bg-red-100 text-red-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-  }[status] || 'bg-gray-100 text-gray-700'
+    sent: 'bg-[var(--success-soft)] text-[var(--success)]',
+    error: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    pending: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
   const labels = {
     sent: 'Enviado',
@@ -22,19 +22,15 @@ function StatusBadge({ status }: { status: string }) {
     pending: 'Pendente',
   }[status] || status
 
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles}`}>
-      {labels}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{labels}</span>
 }
 
 function EventBadge({ eventName }: { eventName: string }) {
   const styles = {
-    Purchase: 'bg-emerald-100 text-emerald-700',
-    LeadSubmitted: 'bg-blue-100 text-blue-700',
-    InitiateCheckout: 'bg-amber-100 text-amber-700',
-  }[eventName] || 'bg-gray-100 text-gray-700'
+    Purchase: 'bg-[var(--success-soft)] text-[var(--success)]',
+    LeadSubmitted: 'bg-[var(--info-soft)] text-[var(--info)]',
+    InitiateCheckout: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
   const labels = {
     Purchase: 'Purchase',
@@ -42,26 +38,18 @@ function EventBadge({ eventName }: { eventName: string }) {
     InitiateCheckout: 'Checkout iniciado',
   }[eventName] || eventName
 
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles}`}>
-      {labels}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{labels}</span>
 }
 
 function SourceBadge({ source }: { source: Conversion['source'] }) {
   const styles = {
-    whatsapp: 'bg-green-100 text-green-700',
-    manual: 'bg-slate-100 text-slate-700',
-    stripe: 'bg-indigo-100 text-indigo-700',
-    mercadopago: 'bg-cyan-100 text-cyan-700',
-  }[source] || 'bg-gray-100 text-gray-700'
+    whatsapp: 'bg-[var(--success-soft)] text-[var(--success)]',
+    manual: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+    stripe: 'bg-[rgba(87,82,195,0.12)] text-[#5146b5]',
+    mercadopago: 'bg-[rgba(0,147,211,0.12)] text-[#0d6ea0]',
+  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles}`}>
-      {source}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{source}</span>
 }
 
 function formatCurrency(value: number, currency: string) {
@@ -114,162 +102,206 @@ export default async function ConversionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-page min-h-screen">
       <Navbar />
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Conversões</h1>
-            <p className="text-gray-500 text-sm mt-0.5">
-              Leads automáticos do webhook e eventos enviados ao Meta via Business Messaging CAPI
-            </p>
+      <main className="page-wrap py-8">
+        <section className="page-header">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="page-kicker">Revenue Console</div>
+              <h1 className="page-title mt-4">Conversões e leads do WhatsApp em uma visão só.</h1>
+              <p className="page-subtitle mt-4">
+                Esta área consolida leads automáticos criados pelo webhook e eventos enviados ao
+                dataset do Meta via Business Messaging CAPI. É a visão operacional para saber o que
+                entrou, o que foi enviado e o que travou.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/webhooks" className="cta-secondary px-5 py-3 text-sm">
+                Auditoria do webhook
+              </Link>
+              <Link href="/conversions/new" className="cta-primary px-5 py-3 text-sm">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Registrar evento
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/conversions/new"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Registrar evento
-          </Link>
-        </div>
+        </section>
 
         {dbError && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-            <p className="text-yellow-800 font-medium text-sm">Banco de dados não inicializado</p>
-            <p className="text-yellow-500 text-xs mt-1">{dbError}</p>
+          <div className="section-card surface mb-6 p-5">
+            <p className="text-sm font-semibold text-[var(--danger)]">Banco de dados não inicializado</p>
+            <p className="mt-1 text-xs text-[var(--foreground-soft)]">{dbError}</p>
           </div>
         )}
 
-        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm font-medium text-blue-900">Como ler esta tela</p>
-          <p className="mt-1 text-sm text-blue-800">
-            <code className="rounded bg-blue-100 px-1 py-0.5">LeadSubmitted</code> é criado
-            automaticamente quando uma conversa do WhatsApp chega com atribuição CTWA.{' '}
-            <code className="rounded bg-blue-100 px-1 py-0.5">Purchase</code> pode ser enviado
-            depois, quando a venda for confirmada.
-          </p>
-        </div>
+        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="metric-card p-5">
+            <p className="metric-label">Total de registros</p>
+            <p className="metric-value">{totalConversions}</p>
+            <p className="metric-note">Todos os eventos persistidos localmente.</p>
+          </div>
+          <div className="metric-card p-5">
+            <p className="metric-label">Leads automáticos</p>
+            <p className="metric-value text-[var(--info)]">{totalLeadConversions}</p>
+            <p className="metric-note">Criados quando a conversa chega com CTWA.</p>
+          </div>
+          <div className="metric-card p-5">
+            <p className="metric-label">Purchases</p>
+            <p className="metric-value text-[var(--success)]">{totalPurchaseConversions}</p>
+            <p className="metric-note">Conversões de venda confirmadas.</p>
+          </div>
+          <div className="metric-card p-5">
+            <p className="metric-label">Enviadas ao Meta</p>
+            <p className="metric-value text-[var(--success)]">{sentCount}</p>
+            <p className="metric-note">Eventos aceitos pelo fluxo atual.</p>
+          </div>
+          <div className="metric-card p-5">
+            <p className="metric-label">Pendentes</p>
+            <p className="metric-value text-[var(--warning)]">{pendingCount}</p>
+            <p className="metric-note">Aguardando processamento ou reenvio.</p>
+          </div>
+          <div className="metric-card p-5">
+            <p className="metric-label">Com erro</p>
+            <p className="metric-value text-[var(--danger)]">{errorCount}</p>
+            <p className="metric-note">Precisam de validação de payload ou asset.</p>
+          </div>
+        </section>
 
-        <div className="grid gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Total de registros
-            </p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{totalConversions}</p>
+        <section className="section-card surface mb-6 p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                Interpretação operacional
+              </p>
+              <p className="mt-2 max-w-4xl text-sm leading-7 text-[var(--foreground-soft)]">
+                <code className="rounded-lg bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">
+                  LeadSubmitted
+                </code>{' '}
+                nasce automaticamente quando o webhook recebe uma conversa atribuída com{' '}
+                <code className="rounded-lg bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                  ctwa_clid
+                </code>
+                .{' '}
+                <code className="rounded-lg bg-[rgba(31,106,79,0.08)] px-2 py-1 text-[var(--success)]">
+                  Purchase
+                </code>{' '}
+                entra depois, quando a venda foi confirmada.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(255,253,249,0.68)] px-4 py-3 text-sm text-[var(--foreground-soft)]">
+              Use esta tela para operação diária.
+            </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Leads automáticos
-            </p>
-            <p className="text-2xl font-bold text-blue-700 mt-1">{totalLeadConversions}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Purchases
-            </p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{totalPurchaseConversions}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Enviadas ao Meta
-            </p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{sentCount}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Pendentes
-            </p>
-            <p className="text-2xl font-bold text-yellow-700 mt-1">{pendingCount}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Com erro
-            </p>
-            <p className="text-2xl font-bold text-red-600 mt-1">{errorCount}</p>
-          </div>
-        </div>
+        </section>
 
         {conversions.length === 0 && !dbError ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <section className="section-card surface-strong p-10 text-center">
+            <div className="mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.6rem] border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.72)]">
+              <svg className="h-9 w-9 text-[var(--foreground-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
             </div>
-            <h3 className="text-gray-900 font-semibold">Nenhuma conversão registrada</h3>
-            <p className="text-gray-500 text-sm mt-1">
-              Os leads aparecem automaticamente pelo webhook e compras podem ser registradas
-              manualmente depois.
+            <h2 className="mt-5 text-2xl font-extrabold tracking-[-0.04em] text-[#162233]">
+              Nenhuma conversão registrada ainda
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[var(--foreground-soft)]">
+              Os leads aparecem automaticamente quando o webhook recebe mensagem atribuída. Se já
+              houve venda, registre um evento manual ligado à conversa correta.
             </p>
-            <Link href="/conversions/new" className="inline-block mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+            <Link href="/conversions/new" className="cta-primary mt-6 px-5 py-3 text-sm">
               Registrar primeiro evento
             </Link>
-          </div>
+          </section>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Data</th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Tipo</th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Cliente</th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Contexto</th>
-                  <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Valor</th>
-                  <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">Status Meta</th>
-                  <th className="px-5 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {conversions.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-4 text-gray-500 whitespace-nowrap">
-                      {formatDatabaseTimestamp(c.created_at, { withSeconds: true })}
-                    </td>
-                    <td className="px-5 py-4">
-                      <EventBadge eventName={c.event_name} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="font-medium text-gray-900">{c.customer_name || '—'}</div>
-                      <div className="text-gray-400 text-xs">
-                        {c.customer_phone ? formatBrazilPhone(c.customer_phone) : c.customer_email || ''}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-gray-600">
-                      <div>{c.product_name || (c.event_name === 'LeadSubmitted' ? 'Lead automático do WhatsApp' : '—')}</div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <SourceBadge source={c.source} />
-                      </div>
-                      {c.source_ref && (
-                        <div className="mt-1 font-mono text-[11px] text-gray-400">{c.source_ref}</div>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-right font-semibold text-gray-900">
-                      {formatConversionValue(c)}
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <StatusBadge status={c.meta_status} />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Link href={`/conversions/${c.id}`} className="text-blue-600 hover:text-blue-800 font-medium text-xs">
-                        Detalhes →
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {errorCount > 0 && (
-              <div className="border-t border-gray-100 px-5 py-3 bg-red-50">
-                <p className="text-red-600 text-xs">
-                  {errorCount} conversão(ões) com erro no envio ao Meta. Verifique os detalhes.
+          <section className="section-card surface overflow-hidden">
+            <div className="flex flex-col gap-3 border-b border-[rgba(52,39,24,0.08)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                  Timeline operacional
                 </p>
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  Últimos registros de conversão
+                </h2>
               </div>
-            )}
-          </div>
+              {errorCount > 0 && (
+                <div className="tag bg-[var(--danger-soft)] text-[var(--danger)]">
+                  {errorCount} evento(s) com erro no envio
+                </div>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="data-table min-w-[980px]">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Cliente</th>
+                    <th>Contexto</th>
+                    <th className="text-right">Valor</th>
+                    <th className="text-center">Status Meta</th>
+                    <th className="text-right">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conversions.map(c => (
+                    <tr key={c.id}>
+                      <td className="whitespace-nowrap text-[var(--foreground-muted)]">
+                        {formatDatabaseTimestamp(c.created_at, { withSeconds: true })}
+                      </td>
+                      <td>
+                        <EventBadge eventName={c.event_name} />
+                      </td>
+                      <td>
+                        <div className="font-semibold text-[#162233]">{c.customer_name || '—'}</div>
+                        <div className="mt-1 text-xs text-[var(--foreground-muted)]">
+                          {c.customer_phone ? formatBrazilPhone(c.customer_phone) : c.customer_email || ''}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="font-medium text-[#243247]">
+                          {c.product_name ||
+                            (c.event_name === 'LeadSubmitted' ? 'Lead automático do WhatsApp' : '—')}
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <SourceBadge source={c.source} />
+                        </div>
+                        {c.source_ref && (
+                          <div className="mt-2 break-all font-mono text-[11px] text-[var(--foreground-muted)]">
+                            {c.source_ref}
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-right font-semibold text-[#162233]">
+                        {formatConversionValue(c)}
+                      </td>
+                      <td className="text-center">
+                        <StatusBadge status={c.meta_status} />
+                      </td>
+                      <td className="text-right">
+                        <Link
+                          href={`/conversions/${c.id}`}
+                          className="font-semibold text-[var(--info)] hover:text-[#173f84]"
+                        >
+                          Abrir →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
       </main>
     </div>

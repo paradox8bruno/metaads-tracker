@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { getConversion, initDB, type Conversion } from '@/lib/db'
 import { Navbar } from '@/components/navbar'
@@ -7,10 +8,10 @@ import { formatBrazilPhone } from '@/lib/phone'
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
-    sent: 'bg-green-100 text-green-700',
-    error: 'bg-red-100 text-red-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-  }[status] || 'bg-gray-100 text-gray-700'
+    sent: 'bg-[var(--success-soft)] text-[var(--success)]',
+    error: 'bg-[var(--danger-soft)] text-[var(--danger)]',
+    pending: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
   const labels = {
     sent: 'Enviado com sucesso',
@@ -18,19 +19,15 @@ function StatusBadge({ status }: { status: string }) {
     pending: 'Pendente',
   }[status] || status
 
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${styles}`}>
-      {labels}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{labels}</span>
 }
 
 function EventBadge({ eventName }: { eventName: string }) {
   const styles = {
-    Purchase: 'bg-emerald-100 text-emerald-700',
-    LeadSubmitted: 'bg-blue-100 text-blue-700',
-    InitiateCheckout: 'bg-amber-100 text-amber-700',
-  }[eventName] || 'bg-gray-100 text-gray-700'
+    Purchase: 'bg-[var(--success-soft)] text-[var(--success)]',
+    LeadSubmitted: 'bg-[var(--info-soft)] text-[var(--info)]',
+    InitiateCheckout: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
   const labels = {
     Purchase: 'Purchase',
@@ -38,26 +35,18 @@ function EventBadge({ eventName }: { eventName: string }) {
     InitiateCheckout: 'Checkout iniciado',
   }[eventName] || eventName
 
-  return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${styles}`}>
-      {labels}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{labels}</span>
 }
 
 function SourceBadge({ source }: { source: Conversion['source'] }) {
   const styles = {
-    whatsapp: 'bg-green-100 text-green-700',
-    manual: 'bg-slate-100 text-slate-700',
-    stripe: 'bg-indigo-100 text-indigo-700',
-    mercadopago: 'bg-cyan-100 text-cyan-700',
-  }[source] || 'bg-gray-100 text-gray-700'
+    whatsapp: 'bg-[var(--success-soft)] text-[var(--success)]',
+    manual: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+    stripe: 'bg-[rgba(87,82,195,0.12)] text-[#5146b5]',
+    mercadopago: 'bg-[rgba(0,147,211,0.12)] text-[#0d6ea0]',
+  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
 
-  return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${styles}`}>
-      {source}
-    </span>
-  )
+  return <span className={`tag ${styles}`}>{source}</span>
 }
 
 function formatCurrency(value: number, currency: string) {
@@ -72,6 +61,19 @@ function formatDisplayValue(conversion: Conversion) {
   return formatCurrency(Number(conversion.value), conversion.currency)
 }
 
+function MetaField({ label, value, mono = false }: { label: string; value: ReactNode; mono?: boolean }) {
+  return (
+    <div>
+      <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+        {label}
+      </p>
+      <div className={`mt-2 break-all text-sm text-[#243247] ${mono ? 'font-mono text-xs' : ''}`}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
 export default async function ConversionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   await initDB()
@@ -82,171 +84,143 @@ export default async function ConversionDetailPage({ params }: { params: Promise
   const isAutomaticLead = conversion.event_name === 'LeadSubmitted'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-page min-h-screen">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/conversions" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <main className="page-wrap py-8">
+        <Link
+          href="/conversions"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground-soft)] hover:text-[#162233]"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Voltar para conversões
         </Link>
 
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {formatDisplayValue(conversion)}
-            </h1>
-            <p className="text-gray-500 text-sm mt-0.5">
-              Registrado em{' '}
-              {formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <EventBadge eventName={conversion.event_name} />
-              <SourceBadge source={conversion.source} />
+        <section className="page-header">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="page-kicker">Event Detail</div>
+              <h1 className="page-title mt-4">{formatDisplayValue(conversion)}</h1>
+              <p className="page-subtitle mt-4">
+                Registrado em {formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}.
+                Esta visão junta contexto do cliente, identificadores de atribuição e o payload
+                enviado para a API da Meta.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <EventBadge eventName={conversion.event_name} />
+                <SourceBadge source={conversion.source} />
+              </div>
             </div>
+            <StatusBadge status={conversion.meta_status} />
           </div>
-          <StatusBadge status={conversion.meta_status} />
-        </div>
+        </section>
 
-        <div className={`mb-6 rounded-xl border p-4 ${isAutomaticLead ? 'border-blue-200 bg-blue-50' : 'border-emerald-200 bg-emerald-50'}`}>
-          <p className={`text-sm font-medium ${isAutomaticLead ? 'text-blue-900' : 'text-emerald-900'}`}>
-            {isAutomaticLead ? 'Lead automático do WhatsApp' : 'Evento de conversão enviado ao Meta'}
+        <section className="section-card surface mb-6 p-5">
+          <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+            Leitura do registro
           </p>
-          <p className={`mt-1 text-sm ${isAutomaticLead ? 'text-blue-800' : 'text-emerald-800'}`}>
+          <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
             {isAutomaticLead
-              ? 'Este registro foi criado automaticamente quando o webhook identificou uma conversa atribuída com ctwa_clid. Ele existe para alimentar o dataset do Meta assim que o lead inicia a conversa.'
-              : 'Este registro representa um evento de negócio enviado ao Meta. Em geral, Purchase é informado depois que o pagamento é confirmado.'}
+              ? 'Este evento foi criado automaticamente quando o webhook identificou uma conversa com ctwa_clid. Ele existe para alimentar o dataset do Meta no início da conversa.'
+              : 'Este evento representa uma conversão de negócio enviada ao Meta. Em geral, Purchase é registrado depois da confirmação de pagamento.'}
           </p>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-sm font-semibold text-gray-700">Resumo do evento</h2>
-            </div>
-            <div className="px-5 py-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Evento</p>
-                <p className="text-gray-900 font-medium">{conversion.event_name}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Origem</p>
-                <p className="text-gray-900 font-medium">{conversion.source}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Status Meta</p>
-                <StatusBadge status={conversion.meta_status} />
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Valor</p>
-                <p className="text-gray-900 font-medium">{formatDisplayValue(conversion)}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Registrado em</p>
-                <p className="text-gray-900 font-medium">
-                  {formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="section-card surface overflow-hidden">
+              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                  Resumo do evento
                 </p>
               </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Enviado ao Meta em</p>
-                <p className="text-gray-900 font-medium">
-                  {conversion.meta_sent_at
-                    ? formatDatabaseTimestamp(conversion.meta_sent_at, {
-                        withSeconds: true,
-                      })
-                    : '—'}
+              <div className="grid gap-5 px-5 py-5 md:grid-cols-2 xl:grid-cols-4">
+                <MetaField label="Evento" value={conversion.event_name} />
+                <MetaField label="Origem" value={conversion.source} />
+                <MetaField label="Valor" value={formatDisplayValue(conversion)} />
+                <MetaField label="Produto / contexto" value={conversion.product_name || (isAutomaticLead ? 'Lead automático do WhatsApp' : '—')} />
+                <MetaField
+                  label="Registrado em"
+                  value={formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}
+                />
+                <MetaField
+                  label="Enviado ao Meta"
+                  value={
+                    conversion.meta_sent_at
+                      ? formatDatabaseTimestamp(conversion.meta_sent_at, { withSeconds: true })
+                      : '—'
+                  }
+                />
+                <MetaField label="Status Meta" value={<StatusBadge status={conversion.meta_status} />} />
+                <MetaField label="Source ref" value={conversion.source_ref || '—'} mono />
+              </div>
+            </section>
+
+            <section className="section-card surface overflow-hidden">
+              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                  Cliente e atribuição
                 </p>
               </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Produto ou contexto</p>
-                <p className="text-gray-900 font-medium">
-                  {conversion.product_name || (isAutomaticLead ? 'Lead automático do WhatsApp' : '—')}
-                </p>
+              <div className="grid gap-5 px-5 py-5 md:grid-cols-2 xl:grid-cols-4">
+                <MetaField label="Nome" value={conversion.customer_name || '—'} />
+                <MetaField
+                  label="Telefone"
+                  value={conversion.customer_phone ? formatBrazilPhone(conversion.customer_phone) : '—'}
+                />
+                <MetaField label="Email" value={conversion.customer_email || '—'} />
+                <MetaField label="Conversa WhatsApp" value={conversion.whatsapp_conversation_id || '—'} mono />
+                <MetaField label="Event ID" value={conversion.event_id} mono />
+                <MetaField label="Dataset ID" value={conversion.dataset_id || '—'} mono />
+                <div className="md:col-span-2 xl:col-span-2">
+                  <MetaField label="CTWA CLID" value={conversion.ctwa_clid || '—'} mono />
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Source ref</p>
-                <p className="break-all font-mono text-xs text-gray-700">
-                  {conversion.source_ref || '—'}
-                </p>
-              </div>
-            </div>
+
+              {conversion.notes && (
+                <div className="border-t border-[rgba(52,39,24,0.08)] px-5 py-5">
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                    Observações
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
+                    {conversion.notes}
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-sm font-semibold text-gray-700">Cliente e atribuição</h2>
-            </div>
-            <div className="px-5 py-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Nome</p>
-                <p className="text-gray-900 font-medium">{conversion.customer_name || '—'}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Telefone</p>
-                <p className="text-gray-900 font-medium">
-                  {conversion.customer_phone ? formatBrazilPhone(conversion.customer_phone) : '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Email</p>
-                <p className="text-gray-900 font-medium">{conversion.customer_email || '—'}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Conversa WhatsApp</p>
-                <p className="break-all font-mono text-xs text-gray-700">
-                  {conversion.whatsapp_conversation_id || '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Event ID (dedup)</p>
-                <p className="text-gray-600 font-mono text-xs">{conversion.event_id}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs mb-0.5">Dataset ID</p>
-                <p className="text-gray-600 font-mono text-xs">{conversion.dataset_id || '—'}</p>
-              </div>
-              <div className="xl:col-span-2">
-                <p className="text-gray-400 text-xs mb-0.5">CTWA CLID</p>
-                <p className="text-gray-600 font-mono text-xs break-all">
-                  {conversion.ctwa_clid || '—'}
-                </p>
-              </div>
-            </div>
-            {conversion.notes && (
-              <div className="border-t border-gray-100 px-5 py-4 text-sm">
-                <p className="text-gray-400 text-xs mb-0.5">Observações</p>
-                <p className="text-gray-700">{conversion.notes}</p>
-              </div>
+          <div className="space-y-6">
+            {conversion.meta_event_payload && (
+              <section className="section-card surface overflow-hidden">
+                <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Payload enviado ao Meta
+                  </p>
+                </div>
+                <div className="px-5 py-5">
+                  <pre className="code-block">
+                    {JSON.stringify(conversion.meta_event_payload, null, 2)}
+                  </pre>
+                </div>
+              </section>
+            )}
+
+            {conversion.meta_response && (
+              <section className="section-card surface overflow-hidden">
+                <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                  <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                    Resposta da API do Meta
+                  </p>
+                </div>
+                <div className="px-5 py-5">
+                  <pre className="code-block">{JSON.stringify(conversion.meta_response, null, 2)}</pre>
+                </div>
+              </section>
             )}
           </div>
-
-          {conversion.meta_event_payload && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                <h2 className="text-sm font-semibold text-gray-700">Payload enviado ao Meta</h2>
-              </div>
-              <div className="px-5 py-4">
-                <pre className="text-xs bg-gray-50 rounded-lg p-4 overflow-auto text-gray-700 font-mono">
-                  {JSON.stringify(conversion.meta_event_payload, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-
-          {conversion.meta_response && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                <h2 className="text-sm font-semibold text-gray-700">Resposta da API do Meta</h2>
-              </div>
-              <div className="px-5 py-4">
-                <pre className="text-xs bg-gray-50 rounded-lg p-4 overflow-auto text-gray-700 font-mono">
-                  {JSON.stringify(conversion.meta_response, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>

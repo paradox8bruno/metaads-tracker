@@ -34,6 +34,36 @@ function formatConversationPhone(phone: string | null) {
   return normalizeBrazilPhone(phone) ? formatBrazilPhone(phone) : phone
 }
 
+function StepHeader({
+  step,
+  title,
+  tone,
+}: {
+  step: string
+  title: string
+  tone: 'green' | 'blue' | 'slate'
+}) {
+  const toneMap = {
+    green: 'bg-[var(--success-soft)] text-[var(--success)]',
+    blue: 'bg-[var(--info-soft)] text-[var(--info)]',
+    slate: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+  }
+
+  return (
+    <div className="mb-5 flex items-center gap-3">
+      <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold ${toneMap[tone]}`}>
+        {step}
+      </span>
+      <div>
+        <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+          Etapa {step}
+        </p>
+        <h2 className="text-base font-bold tracking-[-0.03em] text-[#162233]">{title}</h2>
+      </div>
+    </div>
+  )
+}
+
 export default function NewConversionPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -188,402 +218,382 @@ export default function NewConversionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-page min-h-screen">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Registrar Nova Venda</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Vincule a venda a uma conversa real de Click to WhatsApp para enviar ao Meta pelo fluxo
-            oficial de Business Messaging
-          </p>
-        </div>
+      <main className="page-wrap py-8">
+        <section className="page-header">
+          <div className="page-kicker">Manual Conversion</div>
+          <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
+            <div>
+              <h1 className="page-title">Registrar venda com atribuição oficial do WhatsApp.</h1>
+              <p className="page-subtitle mt-4">
+                Selecione uma conversa que já chegou com CTWA, complete os dados comerciais e envie
+                o evento para o dataset correto do WABA. A tela prioriza o fluxo oficial de
+                Business Messaging.
+              </p>
+            </div>
+            <div className="surface section-card p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                Fluxo correto
+              </p>
+              <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
+                1. Clique no anúncio. 2. Mensagem chega no WhatsApp. 3. O webhook salva o
+                <code className="mx-1 rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                  ctwa_clid
+                </code>
+                . 4. Você registra a venda ligada à conversa. 5. O projeto envia a conversão ao
+                dataset.
+              </p>
+            </div>
+          </div>
+        </section>
 
         {success && (
           <div
-            className={`rounded-xl p-5 mb-6 ${
+            className={`section-card mb-6 border p-5 ${
               success.metaStatus === 'sent'
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-yellow-50 border border-yellow-200'
+                ? 'border-[rgba(31,106,79,0.16)] bg-[var(--success-soft)]'
+                : 'border-[rgba(150,100,0,0.16)] bg-[var(--warning-soft)]'
             }`}
           >
-            <div className="flex items-start gap-3">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  success.metaStatus === 'sent' ? 'bg-green-100' : 'bg-yellow-100'
-                }`}
-              >
-                {success.metaStatus === 'sent' ? (
-                  <svg
-                    className="w-4 h-4 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-4 h-4 text-yellow-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01"
-                    />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <p
-                  className={`font-semibold ${
-                    success.metaStatus === 'sent' ? 'text-green-800' : 'text-yellow-800'
-                  }`}
-                >
-                  {success.metaStatus === 'sent'
-                    ? 'Conversão enviada ao Meta'
-                    : 'Venda salva, mas houve erro no envio ao Meta'}
-                </p>
-                {success.datasetId && (
-                  <p className="text-xs text-gray-500 mt-1">Dataset usado: {success.datasetId}</p>
-                )}
-                {success.eventsReceived !== undefined && (
-                  <p className="text-sm text-green-600 mt-0.5">
-                    {success.eventsReceived} evento(s) recebido(s) pelo Meta
-                  </p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">Redirecionando para a lista...</p>
-              </div>
-            </div>
+            <p className={`text-base font-bold ${success.metaStatus === 'sent' ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
+              {success.metaStatus === 'sent'
+                ? 'Conversão enviada ao Meta'
+                : 'Venda salva, mas houve erro no envio ao Meta'}
+            </p>
+            {success.datasetId && (
+              <p className="mt-2 text-sm text-[var(--foreground-soft)]">
+                Dataset usado: <span className="font-mono text-xs">{success.datasetId}</span>
+              </p>
+            )}
+            {success.eventsReceived !== undefined && (
+              <p className="mt-1 text-sm text-[var(--foreground-soft)]">
+                {success.eventsReceived} evento(s) recebido(s) pelo Meta.
+              </p>
+            )}
+            <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+              Redirecionando para a lista...
+            </p>
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-        >
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-bold">
-                1
-              </span>
-              Lead do WhatsApp
-            </h2>
+        <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="section-card surface overflow-hidden p-6">
+              <StepHeader step="1" title="Lead do WhatsApp" tone="green" />
 
-            {loadingConversations ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-                Carregando conversas capturadas no webhook...
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
-                <p className="text-sm font-medium text-yellow-800">
-                  Nenhum lead atribuído disponível.
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  O lead só aparece aqui depois que o webhook do WhatsApp receber uma mensagem com
-                  `ctwa_clid` vinda de anúncio Click to WhatsApp.
-                </p>
-                {conversationsError && (
-                  <p className="text-xs text-yellow-700 mt-1">{conversationsError}</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Conversa atribuída <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="conversationId"
-                    value={form.conversationId}
-                    onChange={handleConversationChange}
-                    required
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                  >
-                    <option value="">Selecione um lead com CTWA</option>
-                    {conversations.map(conversation => (
-                      <option key={conversation.id} value={conversation.id}>
-                        {(conversation.customer_name || 'Lead sem nome') +
-                          ' • ' +
-                          formatConversationPhone(conversation.customer_phone) +
-                          ' • ' +
-                          formatDate(conversation.latest_message_at)}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Essa lista mostra apenas conversas que já chegaram com `ctwa_clid` no webhook.
+              {loadingConversations ? (
+                <div className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] px-4 py-4 text-sm text-[var(--foreground-soft)]">
+                  Carregando conversas capturadas no webhook...
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="rounded-2xl border border-[rgba(150,100,0,0.16)] bg-[var(--warning-soft)] px-4 py-4">
+                  <p className="text-sm font-semibold text-[var(--warning)]">
+                    Nenhum lead atribuído disponível.
                   </p>
-                </div>
-
-                {selectedConversation && (
-                  <div className="rounded-xl border border-green-100 bg-green-50 p-4 text-sm">
-                    <p className="font-medium text-green-900">
-                      {selectedConversation.customer_name || 'Lead sem nome'}
-                    </p>
-                    <p className="text-green-800 mt-1">
-                      {formatConversationPhone(selectedConversation.customer_phone)}
-                    </p>
-                    <p className="text-green-700 text-xs mt-2">
-                      Última mensagem: {selectedConversation.latest_message_text || 'Sem texto'}
-                    </p>
-                    {selectedConversation.referral_headline && (
-                      <p className="text-green-700 text-xs mt-1">
-                        Anúncio: {selectedConversation.referral_headline}
-                      </p>
-                    )}
-                    <p className="text-green-700 text-xs mt-1 break-all">
-                      CTWA CLID: {selectedConversation.ctwa_clid}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
-                2
-              </span>
-              Dados do Cliente
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome do cliente
-                </label>
-                <input
-                  type="text"
-                  name="customerName"
-                  value={form.customerName}
-                  onChange={handleChange}
-                  placeholder="Ex: João Silva"
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    WhatsApp / Telefone
-                  </label>
-                  <input
-                    type="tel"
-                    name="customerPhone"
-                    value={form.customerPhone}
-                    onChange={handleChange}
-                    onBlur={handlePhoneBlur}
-                    placeholder="+55 11 99999-9999"
-                    inputMode="tel"
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p
-                    className={`text-xs mt-1 ${
-                      phoneIsInvalid ? 'text-red-500' : 'text-gray-400'
-                    }`}
-                  >
-                    {phoneIsInvalid
-                      ? 'Formato inválido. Informe DDD + número; o sistema assume Brasil (+55).'
-                      : 'Opcional para complementar o match do Meta. O envio sai normalizado como 5511999999999.'}
+                  <p className="mt-1 text-sm leading-7 text-[var(--foreground-soft)]">
+                    O lead só aparece aqui depois que o webhook do WhatsApp receber uma mensagem com
+                    <code className="mx-1 rounded bg-white px-2 py-1 text-[var(--accent-ink)]">
+                      ctwa_clid
+                    </code>
+                    vinda de anúncio Click to WhatsApp.
                   </p>
+                  {conversationsError && (
+                    <p className="mt-2 text-xs text-[var(--warning)]">{conversationsError}</p>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email (opcional)
-                  </label>
-                  <input
-                    type="email"
-                    name="customerEmail"
-                    value={form.customerEmail}
-                    onChange={handleChange}
-                    placeholder="cliente@email.com"
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
-                3
-              </span>
-              Dados da Venda
-            </h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Valor da venda <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                      R$
-                    </span>
-                    <input
-                      type="text"
-                      name="value"
-                      value={form.value}
-                      onChange={handleChange}
-                      placeholder="297,00"
-                      required
-                      className="w-full pl-9 pr-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de evento
-                  </label>
-                  <select
-                    name="eventName"
-                    value={form.eventName}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="Purchase">Purchase (Compra)</option>
-                    <option value="LeadSubmitted">LeadSubmitted</option>
-                    <option value="InitiateCheckout">Início de Checkout</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-400">
-                    Para Business Messaging, esta tela usa os eventos oficiais suportados pela Meta.
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Produto / Serviço
-                </label>
-                <input
-                  type="text"
-                  name="productName"
-                  value={form.productName}
-                  onChange={handleChange}
-                  placeholder="Ex: Curso Online, Consultoria..."
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observações
-                </label>
-                <textarea
-                  name="notes"
-                  value={form.notes}
-                  onChange={handleChange}
-                  placeholder="Notas internas (não enviadas ao Meta)"
-                  rows={2}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center text-xs font-bold">
-                4
-              </span>
-              Atribuição Meta
-            </h2>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              <p>
-                O `ctwa_clid` é capturado automaticamente no webhook do WhatsApp e enviado ao Meta
-                pelo dataset de Business Messaging. Não é mais necessário informar `fbclid`
-                manualmente.
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                A conversa selecionada acima é a origem oficial da atribuição desta conversão.
-              </p>
-              <label className="mt-4 flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
-                <input
-                  type="checkbox"
-                  name="useTestEventCode"
-                  checked={form.useTestEventCode}
-                  onChange={handleChange}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>
-                  <span className="block text-sm font-medium text-gray-700">
-                    Enviar como evento de teste
-                  </span>
-                  <span className="block text-xs text-gray-500 mt-1">
-                    Use isso apenas para validar em Test Events. Desmarcado, a conversão segue como
-                    evento real.
-                  </span>
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {error && (
-            <div className="px-6 py-4 bg-red-50 border-b border-red-100">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
-          <div className="px-6 py-5 flex items-center gap-3 bg-gray-50">
-            <button
-              type="submit"
-              disabled={loading || !!success || loadingConversations || conversations.length === 0}
-              className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-60 disabled:cursor-not-allowed text-sm"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Enviando ao Meta...
-                </span>
-              ) : success ? (
-                'Enviado'
               ) : (
-                'Registrar e Enviar ao Meta'
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/conversions')}
-              className="px-5 py-3 text-gray-600 hover:text-gray-900 text-sm font-medium transition"
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
+                <div className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                      Conversa atribuída <span className="text-[var(--danger)]">*</span>
+                    </label>
+                    <select
+                      name="conversationId"
+                      value={form.conversationId}
+                      onChange={handleConversationChange}
+                      required
+                      className="field-select"
+                    >
+                      <option value="">Selecione um lead com CTWA</option>
+                      {conversations.map(conversation => (
+                        <option key={conversation.id} value={conversation.id}>
+                          {(conversation.customer_name || 'Lead sem nome') +
+                            ' • ' +
+                            formatConversationPhone(conversation.customer_phone) +
+                            ' • ' +
+                            formatDate(conversation.latest_message_at)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+                      Esta lista mostra apenas conversas que chegaram com CTWA válido no webhook.
+                    </p>
+                  </div>
 
-        <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-4">
-          <p className="text-green-700 text-xs font-medium">Fluxo correto de CTWA</p>
-          <p className="text-green-600 text-xs mt-1">
-            1. O usuário clica no anúncio. 2. Entra no WhatsApp. 3. O webhook captura a mensagem com
-            `ctwa_clid`. 4. Você registra a venda usando a conversa atribuída. 5. A API envia a
-            conversão ao dataset de Business Messaging.
-          </p>
-        </div>
+                  {selectedConversation && (
+                    <div className="rounded-[1.4rem] border border-[rgba(31,106,79,0.16)] bg-[rgba(217,239,228,0.68)] p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-lg font-bold tracking-[-0.03em] text-[#163225]">
+                            {selectedConversation.customer_name || 'Lead sem nome'}
+                          </p>
+                          <p className="mt-1 text-sm text-[var(--success)]">
+                            {formatConversationPhone(selectedConversation.customer_phone)}
+                          </p>
+                        </div>
+                        <div className="tag bg-white text-[var(--success)]">CTWA pronto</div>
+                      </div>
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                            Última mensagem
+                          </p>
+                          <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
+                            {selectedConversation.latest_message_text || 'Sem texto'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                            Anúncio
+                          </p>
+                          <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
+                            {selectedConversation.referral_headline || 'Sem headline'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                          CTWA CLID
+                        </p>
+                        <p className="mt-2 break-all font-mono text-xs text-[#243247]">
+                          {selectedConversation.ctwa_clid}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="section-card surface overflow-hidden p-6">
+              <StepHeader step="2" title="Dados do cliente" tone="blue" />
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    Nome do cliente
+                  </label>
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={form.customerName}
+                    onChange={handleChange}
+                    placeholder="Ex: João Silva"
+                    className="field-input"
+                  />
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                      WhatsApp / Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      name="customerPhone"
+                      value={form.customerPhone}
+                      onChange={handleChange}
+                      onBlur={handlePhoneBlur}
+                      placeholder="+55 11 99999-9999"
+                      inputMode="tel"
+                      className="field-input"
+                    />
+                    <p className={`mt-2 text-xs ${phoneIsInvalid ? 'text-[var(--danger)]' : 'text-[var(--foreground-muted)]'}`}>
+                      {phoneIsInvalid
+                        ? 'Formato inválido. Informe DDD + número; o sistema assume Brasil (+55).'
+                        : 'Opcional para complementar o match do Meta. O envio sai normalizado como 5511999999999.'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="customerEmail"
+                      value={form.customerEmail}
+                      onChange={handleChange}
+                      placeholder="cliente@email.com"
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="section-card surface overflow-hidden p-6">
+              <StepHeader step="3" title="Dados da venda" tone="blue" />
+              <div className="space-y-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                      Valor da venda <span className="text-[var(--danger)]">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--foreground-muted)]">
+                        R$
+                      </span>
+                      <input
+                        type="text"
+                        name="value"
+                        value={form.value}
+                        onChange={handleChange}
+                        placeholder="297,00"
+                        required
+                        className="field-input pl-11"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                      Tipo de evento
+                    </label>
+                    <select
+                      name="eventName"
+                      value={form.eventName}
+                      onChange={handleChange}
+                      className="field-select"
+                    >
+                      <option value="Purchase">Purchase (Compra)</option>
+                      <option value="LeadSubmitted">LeadSubmitted</option>
+                      <option value="InitiateCheckout">Início de Checkout</option>
+                    </select>
+                    <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+                      Esta tela usa os eventos oficiais suportados pela Meta para Business Messaging.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    Produto / Serviço
+                  </label>
+                  <input
+                    type="text"
+                    name="productName"
+                    value={form.productName}
+                    onChange={handleChange}
+                    placeholder="Ex: Curso Online, Consultoria..."
+                    className="field-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    Observações
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={form.notes}
+                    onChange={handleChange}
+                    placeholder="Notas internas (não enviadas ao Meta)"
+                    rows={3}
+                    className="field-textarea"
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside className="space-y-6">
+            <section className="section-card surface overflow-hidden p-6">
+              <StepHeader step="4" title="Atribuição Meta" tone="slate" />
+              <div className="space-y-4 text-sm leading-7 text-[var(--foreground-soft)]">
+                <p>
+                  O <code className="rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">ctwa_clid</code>{' '}
+                  é capturado automaticamente no webhook e enviado ao Meta pelo dataset de Business
+                  Messaging.
+                </p>
+                <p>
+                  A conversa selecionada é a origem oficial da atribuição desta conversão. Não é mais
+                  necessário preencher <code className="rounded bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">fbclid</code>{' '}
+                  manualmente.
+                </p>
+
+                <label className="flex items-start gap-3 rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] px-4 py-4">
+                  <input
+                    type="checkbox"
+                    name="useTestEventCode"
+                    checked={form.useTestEventCode}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 rounded border-[rgba(52,39,24,0.14)] text-[var(--info)] focus:ring-[var(--info)]"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-[#243247]">
+                      Enviar como evento de teste
+                    </span>
+                    <span className="mt-1 block text-xs leading-6 text-[var(--foreground-muted)]">
+                      Use apenas para validar em Test Events. Desmarcado, a conversão segue como evento real.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <section className="section-card surface-muted p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                Checklist antes de enviar
+              </p>
+              <ul className="mt-3 space-y-3 text-sm leading-7 text-[var(--foreground-soft)]">
+                <li>Conversa precisa ter vindo com CTWA válido.</li>
+                <li>Telefone do cliente deve estar em formato brasileiro válido.</li>
+                <li>Valor padrão do projeto está em R$ 69 e pode ser sobrescrito.</li>
+                <li>Use evento de teste só quando estiver com a aba Test Events aberta.</li>
+              </ul>
+            </section>
+
+            {error && (
+              <section className="section-card border border-[rgba(180,35,24,0.16)] bg-[var(--danger-soft)] p-4">
+                <p className="text-sm font-semibold text-[var(--danger)]">{error}</p>
+              </section>
+            )}
+
+            <section className="section-card surface overflow-hidden p-6">
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={loading || !!success || loadingConversations || conversations.length === 0}
+                  className="cta-primary w-full px-5 py-3.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Enviando ao Meta...
+                    </span>
+                  ) : success ? (
+                    'Enviado'
+                  ) : (
+                    'Registrar e enviar ao Meta'
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => router.push('/conversions')}
+                  className="cta-secondary w-full px-5 py-3 text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </section>
+          </aside>
+        </form>
       </main>
     </div>
   )
