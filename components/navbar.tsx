@@ -7,6 +7,7 @@ const items = [
   { href: '/conversions', label: 'Conversões', eyebrow: 'Revenue' },
   { href: '/conversions/new', label: 'Nova venda', eyebrow: 'Capture' },
   { href: '/webhooks', label: 'Webhook', eyebrow: 'Debug' },
+  { href: '/settings', label: 'Configurações', eyebrow: 'Setup' },
 ]
 
 function isActive(pathname: string, href: string) {
@@ -14,7 +15,7 @@ function isActive(pathname: string, href: string) {
     return pathname === '/conversions' || pathname.startsWith('/conversions/')
   }
 
-  return pathname === href
+  return pathname === href || pathname.startsWith(href + '/')
 }
 
 export function Navbar() {
