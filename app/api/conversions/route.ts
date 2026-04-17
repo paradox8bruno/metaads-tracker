@@ -31,7 +31,13 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
 
     const conversationId = String(body.conversationId || '')
-    const value = Number(body.value)
+    const rawValue = body.value
+    const value =
+      rawValue === null ||
+      rawValue === undefined ||
+      (typeof rawValue === 'string' && rawValue.trim() === '')
+        ? 69
+        : Number(rawValue)
     const currency = String(body.currency || 'BRL')
     const eventName = String(body.eventName || 'Purchase')
     const useTestEventCode = body.useTestEventCode === true

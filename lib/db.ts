@@ -67,12 +67,25 @@ export interface WhatsAppMessage {
   waba_id: string
   wa_id: string | null
   phone_number_id: string | null
-  payload_type: 'message' | 'status'
+  payload_type: 'message' | 'status' | 'echo'
   message_id: string | null
   status: string | null
   direction: 'inbound' | 'outbound' | 'system'
   message_type: string | null
   message_text: string | null
+  event_timestamp: string | null
+  raw_payload: Record<string, unknown>
+}
+
+export interface WhatsAppWebhookTopicEvent {
+  id: string
+  created_at: string
+  event_key: string
+  waba_id: string
+  phone_number_id: string | null
+  wa_id: string | null
+  field: 'automatic_events' | 'tracking_events'
+  event_name: string | null
   event_timestamp: string | null
   raw_payload: Record<string, unknown>
 }
@@ -98,7 +111,10 @@ export interface WebhookDelivery {
   change_count: number
   conversations_upserted: number
   message_events_stored: number
+  echo_events_stored: number
   status_events_stored: number
+  automatic_events_stored: number
+  tracking_events_stored: number
   ignored_entries: number
   ignored_changes: number
   error_message: string | null
@@ -241,10 +257,43 @@ export async function initDB() {
       change_count INTEGER DEFAULT 0,
       conversations_upserted INTEGER DEFAULT 0,
       message_events_stored INTEGER DEFAULT 0,
+      echo_events_stored INTEGER DEFAULT 0,
       status_events_stored INTEGER DEFAULT 0,
+      automatic_events_stored INTEGER DEFAULT 0,
+      tracking_events_stored INTEGER DEFAULT 0,
       ignored_entries INTEGER DEFAULT 0,
       ignored_changes INTEGER DEFAULT 0,
       error_message TEXT
+    )
+  `
+
+  await sql`
+    ALTER TABLE webhook_deliveries
+    ADD COLUMN IF NOT EXISTS echo_events_stored INTEGER DEFAULT 0
+  `
+
+  await sql`
+    ALTER TABLE webhook_deliveries
+    ADD COLUMN IF NOT EXISTS automatic_events_stored INTEGER DEFAULT 0
+  `
+
+  await sql`
+    ALTER TABLE webhook_deliveries
+    ADD COLUMN IF NOT EXISTS tracking_events_stored INTEGER DEFAULT 0
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS whatsapp_webhook_topic_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at TIMESTAMP DEFAULT now(),
+      event_key TEXT NOT NULL UNIQUE,
+      waba_id TEXT NOT NULL,
+      phone_number_id TEXT,
+      wa_id TEXT,
+      field VARCHAR(30) NOT NULL,
+      event_name TEXT,
+      event_timestamp TIMESTAMP,
+      raw_payload JSONB NOT NULL
     )
   `
 
@@ -431,6 +480,40 @@ export async function countWhatsAppMessages(): Promise<number> {
   return Number(rows[0]?.count || 0)
 }
 
+export async function listWhatsAppWebhookTopicEvents(options?: {
+  limit?: number
+}): Promise<WhatsAppWebhookTopicEvent[]> {
+  const limit = Math.max(1, Math.min(options?.limit ?? 100, 500))
+
+  const rows = await sql`
+    SELECT *
+    FROM whatsapp_webhook_topic_events
+    ORDER BY event_timestamp DESC NULLS LAST, created_at DESC
+    LIMIT ${limit}
+  `
+
+  return rows as WhatsAppWebhookTopicEvent[]
+}
+
+export async function countWhatsAppWebhookTopicEvents(options?: {
+  field?: WhatsAppWebhookTopicEvent['field']
+}): Promise<number> {
+  const field = options?.field || null
+
+  const rows = field
+    ? await sql`
+        SELECT count(*)::int AS count
+        FROM whatsapp_webhook_topic_events
+        WHERE field = ${field}
+      `
+    : await sql`
+        SELECT count(*)::int AS count
+        FROM whatsapp_webhook_topic_events
+      `
+
+  return Number(rows[0]?.count || 0)
+}
+
 export async function listWebhookDeliveries(options?: {
   limit?: number
 }): Promise<WebhookDelivery[]> {
@@ -468,7 +551,10 @@ export async function insertWebhookDelivery(data: {
   changeCount?: number
   conversationsUpserted?: number
   messageEventsStored?: number
+  echoEventsStored?: number
   statusEventsStored?: number
+  automaticEventsStored?: number
+  trackingEventsStored?: number
   ignoredEntries?: number
   ignoredChanges?: number
   errorMessage?: string | null
@@ -487,7 +573,10 @@ export async function insertWebhookDelivery(data: {
       change_count,
       conversations_upserted,
       message_events_stored,
+      echo_events_stored,
       status_events_stored,
+      automatic_events_stored,
+      tracking_events_stored,
       ignored_entries,
       ignored_changes,
       error_message
@@ -504,7 +593,10 @@ export async function insertWebhookDelivery(data: {
       ${data.changeCount || 0},
       ${data.conversationsUpserted || 0},
       ${data.messageEventsStored || 0},
+      ${data.echoEventsStored || 0},
       ${data.statusEventsStored || 0},
+      ${data.automaticEventsStored || 0},
+      ${data.trackingEventsStored || 0},
       ${data.ignoredEntries || 0},
       ${data.ignoredChanges || 0},
       ${data.errorMessage || null}
@@ -513,6 +605,49 @@ export async function insertWebhookDelivery(data: {
   `
 
   return rows[0] as WebhookDelivery
+}
+
+export async function upsertWhatsAppWebhookTopicEvent(data: {
+  eventKey: string
+  wabaId: string
+  phoneNumberId?: string | null
+  waId?: string | null
+  field: WhatsAppWebhookTopicEvent['field']
+  eventName?: string | null
+  eventTimestamp?: string | null
+  rawPayload: Record<string, unknown>
+}): Promise<WhatsAppWebhookTopicEvent> {
+  const rows = await sql`
+    INSERT INTO whatsapp_webhook_topic_events (
+      event_key,
+      waba_id,
+      phone_number_id,
+      wa_id,
+      field,
+      event_name,
+      event_timestamp,
+      raw_payload
+    ) VALUES (
+      ${data.eventKey},
+      ${data.wabaId},
+      ${data.phoneNumberId || null},
+      ${data.waId || null},
+      ${data.field},
+      ${data.eventName || null},
+      ${data.eventTimestamp || null},
+      ${JSON.stringify(data.rawPayload)}
+    )
+    ON CONFLICT (event_key)
+    DO UPDATE SET
+      phone_number_id = COALESCE(EXCLUDED.phone_number_id, whatsapp_webhook_topic_events.phone_number_id),
+      wa_id = COALESCE(EXCLUDED.wa_id, whatsapp_webhook_topic_events.wa_id),
+      event_name = COALESCE(EXCLUDED.event_name, whatsapp_webhook_topic_events.event_name),
+      event_timestamp = COALESCE(EXCLUDED.event_timestamp, whatsapp_webhook_topic_events.event_timestamp),
+      raw_payload = EXCLUDED.raw_payload
+    RETURNING *
+  `
+
+  return rows[0] as WhatsAppWebhookTopicEvent
 }
 
 export async function upsertWhatsAppConversationFromWebhook(data: {
@@ -616,7 +751,7 @@ export async function upsertWhatsAppMessage(data: {
   wabaId: string
   waId?: string | null
   phoneNumberId?: string | null
-  payloadType: 'message' | 'status'
+  payloadType: 'message' | 'status' | 'echo'
   messageId?: string | null
   status?: string | null
   direction: 'inbound' | 'outbound' | 'system'

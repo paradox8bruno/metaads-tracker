@@ -5,15 +5,18 @@ import {
   countWebhookDeliveries,
   countWhatsAppConversations,
   countWhatsAppMessages,
+  countWhatsAppWebhookTopicEvents,
   initDB,
   listLeadConversions,
   listWebhookDeliveries,
   listWhatsAppConversations,
   listWhatsAppMessages,
+  listWhatsAppWebhookTopicEvents,
   type Conversion,
   type WebhookDelivery,
   type WhatsAppConversation,
   type WhatsAppMessage,
+  type WhatsAppWebhookTopicEvent,
 } from '@/lib/db'
 import { formatDatabaseTimestamp } from '@/lib/datetime'
 import { formatBrazilPhone } from '@/lib/phone'
@@ -124,10 +127,14 @@ export default async function WebhookHistoryPage() {
   let leadConversions: Conversion[] = []
   let conversations: WhatsAppConversation[] = []
   let messages: WhatsAppMessage[] = []
+  let topicEvents: WhatsAppWebhookTopicEvent[] = []
   let totalDeliveries = 0
   let totalConversations = 0
   let totalAttributed = 0
   let totalMessages = 0
+  let totalTopicEvents = 0
+  let totalAutomaticEvents = 0
+  let totalTrackingEvents = 0
   let totalLeadCreated = 0
   let totalLeadSent = 0
   let totalLeadError = 0
@@ -141,10 +148,14 @@ export default async function WebhookHistoryPage() {
       leadConversions,
       conversations,
       messages,
+      topicEvents,
       totalDeliveries,
       totalConversations,
       totalAttributed,
       totalMessages,
+      totalTopicEvents,
+      totalAutomaticEvents,
+      totalTrackingEvents,
       totalLeadCreated,
       totalLeadSent,
       totalLeadError,
@@ -153,10 +164,14 @@ export default async function WebhookHistoryPage() {
       listLeadConversions(),
       listWhatsAppConversations(),
       listWhatsAppMessages({ limit: 100 }),
+      listWhatsAppWebhookTopicEvents({ limit: 100 }),
       countWebhookDeliveries(),
       countWhatsAppConversations(),
       countWhatsAppConversations({ onlyAttributed: true }),
       countWhatsAppMessages(),
+      countWhatsAppWebhookTopicEvents(),
+      countWhatsAppWebhookTopicEvents({ field: 'automatic_events' }),
+      countWhatsAppWebhookTopicEvents({ field: 'tracking_events' }),
       countConversions({ eventName: 'LeadSubmitted' }),
       countConversions({ eventName: 'LeadSubmitted', status: 'sent' }),
       countConversions({ eventName: 'LeadSubmitted', status: 'error' }),
@@ -209,6 +224,15 @@ export default async function WebhookHistoryPage() {
                   Eventos recebidos
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{totalMessages}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Eventos extras
+                </p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{totalTopicEvents}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {totalAutomaticEvents} automáticos • {totalTrackingEvents} tracking
+                </p>
               </div>
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -422,8 +446,20 @@ export default async function WebhookHistoryPage() {
                             <p>{delivery.message_events_stored}</p>
                           </div>
                           <div>
+                            <p className="text-gray-400">Echoes</p>
+                            <p>{delivery.echo_events_stored}</p>
+                          </div>
+                          <div>
                             <p className="text-gray-400">Statuses</p>
                             <p>{delivery.status_events_stored}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Automatic</p>
+                            <p>{delivery.automatic_events_stored}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Tracking</p>
+                            <p>{delivery.tracking_events_stored}</p>
                           </div>
                           <div>
                             <p className="text-gray-400">Ignorados</p>
@@ -464,6 +500,72 @@ export default async function WebhookHistoryPage() {
                           </pre>
                         </details>
                       </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Automatic e Tracking Events
+                </h2>
+                <p className="text-xs text-gray-500">{topicEvents.length} mais recentes exibidos</p>
+              </div>
+
+              {topicEvents.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
+                  Nenhum evento extra de webhook salvo ainda.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {topicEvents.map(event => (
+                    <article key={event.id} className="rounded-xl border border-gray-200 bg-white p-5">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-semibold text-gray-900">
+                              {event.event_name || event.field}
+                            </h3>
+                            <span className="inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                              {event.field}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {formatDatabaseTimestamp(event.created_at, { withSeconds: true })}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-gray-600 md:grid-cols-3">
+                          <div>
+                            <p className="text-gray-400">WA ID</p>
+                            <p className="break-all font-mono">{event.wa_id || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Phone Number ID</p>
+                            <p className="break-all font-mono">{event.phone_number_id || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Event time</p>
+                            <p>
+                              {event.event_timestamp
+                                ? formatDatabaseTimestamp(event.event_timestamp, {
+                                    withSeconds: true,
+                                  })
+                                : '—'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <details className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                        <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                          Payload bruto
+                        </summary>
+                        <pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-gray-700">
+                          {JSON.stringify(event.raw_payload, null, 2)}
+                        </pre>
+                      </details>
                     </article>
                   ))}
                 </div>

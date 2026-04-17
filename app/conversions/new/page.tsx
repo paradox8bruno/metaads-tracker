@@ -53,7 +53,7 @@ export default function NewConversionPage() {
     customerName: '',
     customerPhone: '',
     customerEmail: '',
-    value: '',
+    value: '69',
     currency: 'BRL',
     productName: '',
     notes: '',
@@ -66,7 +66,7 @@ export default function NewConversionPage() {
 
     async function loadConversations() {
       try {
-        const response = await fetch('/api/whatsapp/conversations')
+        const response = await fetch('/api/whatsapp/conversations?attributedOnly=1')
         const data = (await response.json()) as WhatsAppConversationOption[] & {
           error?: string
         }
