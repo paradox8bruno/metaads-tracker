@@ -239,7 +239,7 @@ describe('WhatsApp webhook route', () => {
       object: 'whatsapp_business_account',
       entry: [
         {
-          id: '25918732601086622',
+          id: '0',
           changes: [
             {
               field: 'automatic_events',
@@ -247,9 +247,10 @@ describe('WhatsApp webhook route', () => {
                 metadata: {
                   phone_number_id: '1050440834824684',
                 },
-                events: [
+                automatic_events: [
                   {
-                    event: 'PURCHASE_DETECTED',
+                    id: 'evt-auto-1',
+                    event_name: 'purchase',
                     timestamp: '1776005000',
                     wa_id: '5511777777777',
                   },

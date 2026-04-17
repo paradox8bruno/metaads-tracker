@@ -126,32 +126,32 @@ async function findDatasetIdForWaba(
   return null
 }
 
-export async function getOrCreateDatasetId(): Promise<string> {
+export async function getOrCreateDatasetId(wabaId?: string | null): Promise<string> {
   if (process.env.META_DATASET_ID) {
     return process.env.META_DATASET_ID
   }
 
-  const cached = await getAppSetting('meta_dataset_id')
+  const resolvedWabaId =
+    wabaId ||
+    requireEnv('WHATSAPP_BUSINESS_ACCOUNT_ID', process.env.WHATSAPP_BUSINESS_ACCOUNT_ID)
+
+  const cacheKey = `meta_dataset_id:${resolvedWabaId}`
+  const cached = await getAppSetting(cacheKey)
   if (cached) {
     return cached
   }
 
-  const wabaId = requireEnv(
-    'WHATSAPP_BUSINESS_ACCOUNT_ID',
-    process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
-  )
-
-  let datasetId = await findDatasetIdForWaba(wabaId, 'GET')
+  let datasetId = await findDatasetIdForWaba(resolvedWabaId, 'GET')
 
   if (!datasetId) {
-    datasetId = await findDatasetIdForWaba(wabaId, 'POST')
+    datasetId = await findDatasetIdForWaba(resolvedWabaId, 'POST')
   }
 
   if (!datasetId) {
     throw new Error('Não foi possível obter o dataset do WhatsApp Business Account.')
   }
 
-  await setAppSetting('meta_dataset_id', datasetId)
+  await setAppSetting(cacheKey, datasetId)
   return datasetId
 }
 
@@ -162,7 +162,7 @@ export async function sendConversionEvent(
     throw new Error('A conversa selecionada não possui ctwa_clid.')
   }
 
-  const datasetId = await getOrCreateDatasetId()
+  const datasetId = await getOrCreateDatasetId(data.conversation.waba_id)
   const eventTime = Math.floor(Date.now() / 1000)
 
   const userData: Record<string, string> = {

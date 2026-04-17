@@ -19,8 +19,6 @@ import {
 
 const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
 const APP_SECRET = process.env.META_APP_SECRET
-const EXPECTED_WABA_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || null
-const EXPECTED_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || null
 
 interface WebhookContact {
   wa_id?: string
@@ -157,10 +155,6 @@ function buildContactsByWaId(value: WebhookValue): Map<string, WebhookContact> {
   return contactsByWaId
 }
 
-function shouldIgnorePhoneNumber(phoneNumberId: string | null): boolean {
-  return Boolean(EXPECTED_PHONE_NUMBER_ID && phoneNumberId && phoneNumberId !== EXPECTED_PHONE_NUMBER_ID)
-}
-
 function extractEventTimestamp(payload: Record<string, unknown>): string | null {
   const candidates = [
     payload.timestamp,
@@ -223,7 +217,12 @@ function extractEventWaId(payload: Record<string, unknown>): string | null {
 }
 
 function normalizeTopicEventPayloads(value: Record<string, unknown>): Record<string, unknown>[] {
-  const nestedCandidates = [value.events, value.data]
+  const nestedCandidates = [
+    value.automatic_events,
+    value.tracking_events,
+    value.events,
+    value.data,
+  ]
 
   for (const candidate of nestedCandidates) {
     if (Array.isArray(candidate)) {
@@ -504,17 +503,13 @@ export async function POST(req: NextRequest) {
   let statusEventsStored = 0
   let automaticEventsStored = 0
   let trackingEventsStored = 0
-  let ignoredEntries = 0
-  let ignoredChanges = 0
+  const ignoredEntries = 0
+  const ignoredChanges = 0
 
   try {
     for (const entry of payload.entry) {
       const wabaId = entry.id
       if (!wabaId) continue
-      if (EXPECTED_WABA_ID && wabaId !== EXPECTED_WABA_ID) {
-        ignoredEntries += 1
-        continue
-      }
 
       for (const change of entry.changes || []) {
         if (!change.field || !change.value) continue
@@ -522,11 +517,6 @@ export async function POST(req: NextRequest) {
         const value = change.value as WebhookValue
         const phoneNumberId = value.metadata?.phone_number_id || null
         const displayPhoneNumber = value.metadata?.display_phone_number || null
-
-        if (shouldIgnorePhoneNumber(phoneNumberId)) {
-          ignoredChanges += 1
-          continue
-        }
 
         switch (change.field) {
           case 'messages': {
