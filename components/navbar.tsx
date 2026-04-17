@@ -28,12 +28,12 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[rgba(52,39,24,0.08)] bg-[rgba(251,248,242,0.82)] backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-[rgba(148,163,184,0.12)] bg-[rgba(7,12,20,0.82)] backdrop-blur-xl">
       <div className="page-wrap">
         <nav className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center justify-between gap-4">
             <Link href="/conversions" className="group flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[rgba(183,100,43,0.18)] bg-[linear-gradient(145deg,#132033,#2c4665)] text-white shadow-[0_16px_30px_rgba(19,32,51,0.22)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[rgba(96,165,250,0.18)] bg-[linear-gradient(145deg,#132033,#2c4665)] text-white shadow-[0_16px_30px_rgba(2,6,23,0.45)]">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
@@ -47,7 +47,7 @@ export function Navbar() {
                 <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[var(--foreground-muted)]">
                   Meta Ads Tracker
                 </p>
-                <p className="text-base font-extrabold tracking-[-0.03em] text-[#162233]">
+                <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--foreground)]">
                   Control Room
                 </p>
               </div>
@@ -72,14 +72,14 @@ export function Navbar() {
                     href={item.href}
                     className={`rounded-2xl border px-4 py-3 ${
                       active
-                        ? 'border-[rgba(183,100,43,0.24)] bg-[rgba(255,253,249,0.96)] shadow-[0_10px_24px_rgba(43,31,16,0.08)]'
-                        : 'border-transparent bg-transparent hover:border-[rgba(52,39,24,0.08)] hover:bg-[rgba(255,253,249,0.68)]'
+                        ? 'border-[rgba(96,165,250,0.24)] bg-[rgba(17,29,48,0.96)] shadow-[0_10px_24px_rgba(2,6,23,0.36)]'
+                        : 'border-transparent bg-transparent hover:border-[rgba(148,163,184,0.12)] hover:bg-[rgba(17,29,48,0.78)]'
                     }`}
                   >
                     <span className="block text-[0.63rem] font-bold uppercase tracking-[0.18em] text-[var(--foreground-muted)]">
                       {item.eyebrow}
                     </span>
-                    <span className="mt-0.5 block text-sm font-bold text-[#1e2b3b]">
+                    <span className="mt-0.5 block text-sm font-bold text-[var(--foreground)]">
                       {item.label}
                     </span>
                   </Link>

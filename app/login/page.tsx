@@ -38,10 +38,10 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(183,100,43,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(37,89,178,0.18),transparent_32%),linear-gradient(145deg,#f9f4ec_0%,#efe7db_52%,#e9dfd2_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.14),transparent_32%),linear-gradient(145deg,#0b1220_0%,#09111d_52%,#060d18_100%)]" />
 
-      <div className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-[rgba(52,39,24,0.1)] bg-[rgba(255,252,246,0.8)] shadow-[0_32px_100px_rgba(43,31,16,0.16)] backdrop-blur-xl lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="border-b border-[rgba(52,39,24,0.08)] px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r">
+      <div className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-[rgba(148,163,184,0.14)] bg-[rgba(9,17,31,0.84)] shadow-[0_32px_100px_rgba(2,6,23,0.55)] backdrop-blur-xl lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="border-b border-[rgba(148,163,184,0.12)] px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r">
           <div className="page-kicker">Business Messaging</div>
           <div className="mt-6 max-w-xl">
             <h1 className="page-title">Painel de captura, auditoria e conversão para Meta Ads.</h1>
@@ -76,7 +76,7 @@ export default function LoginPage() {
               <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--foreground-muted)]">
                 Acesso privado
               </p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[#162233]">
+              <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[var(--foreground)]">
                 Entrar no painel
               </h2>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground-soft)]">
@@ -86,7 +86,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                   Senha de acesso
                 </label>
                 <input
@@ -115,7 +115,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
+            <div className="mt-6 rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                 O que você encontra lá dentro
               </p>

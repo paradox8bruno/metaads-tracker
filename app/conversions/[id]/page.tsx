@@ -11,7 +11,7 @@ function StatusBadge({ status }: { status: string }) {
     sent: 'bg-[var(--success-soft)] text-[var(--success)]',
     error: 'bg-[var(--danger-soft)] text-[var(--danger)]',
     pending: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   const labels = {
     sent: 'Enviado com sucesso',
@@ -27,7 +27,7 @@ function EventBadge({ eventName }: { eventName: string }) {
     Purchase: 'bg-[var(--success-soft)] text-[var(--success)]',
     LeadSubmitted: 'bg-[var(--info-soft)] text-[var(--info)]',
     InitiateCheckout: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   const labels = {
     Purchase: 'Purchase',
@@ -41,10 +41,10 @@ function EventBadge({ eventName }: { eventName: string }) {
 function SourceBadge({ source }: { source: Conversion['source'] }) {
   const styles = {
     whatsapp: 'bg-[var(--success-soft)] text-[var(--success)]',
-    manual: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
-    stripe: 'bg-[rgba(87,82,195,0.12)] text-[#5146b5]',
-    mercadopago: 'bg-[rgba(0,147,211,0.12)] text-[#0d6ea0]',
-  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+    manual: 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]',
+    stripe: 'bg-[rgba(129,140,248,0.16)] text-[#c7d2fe]',
+    mercadopago: 'bg-[rgba(34,211,238,0.16)] text-[#a5f3fc]',
+  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   return <span className={`tag ${styles}`}>{source}</span>
 }
@@ -67,7 +67,7 @@ function MetaField({ label, value, mono = false }: { label: string; value: React
       <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
         {label}
       </p>
-      <div className={`mt-2 break-all text-sm text-[#243247] ${mono ? 'font-mono text-xs' : ''}`}>
+      <div className={`mt-2 break-all text-sm text-[var(--foreground-soft)] ${mono ? 'font-mono text-xs' : ''}`}>
         {value}
       </div>
     </div>
@@ -90,7 +90,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
       <main className="page-wrap py-8">
         <Link
           href="/conversions"
-          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground-soft)] hover:text-[#162233]"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground-soft)] hover:text-[var(--foreground)]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -131,7 +131,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-6">
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                 <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                   Resumo do evento
                 </p>
@@ -159,7 +159,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
             </section>
 
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                 <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                   Cliente e atribuição
                 </p>
@@ -180,7 +180,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
               </div>
 
               {conversion.notes && (
-                <div className="border-t border-[rgba(52,39,24,0.08)] px-5 py-5">
+                <div className="border-t border-[rgba(148,163,184,0.12)] px-5 py-5">
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
                     Observações
                   </p>
@@ -195,7 +195,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
           <div className="space-y-6">
             {conversion.meta_event_payload && (
               <section className="section-card surface overflow-hidden">
-                <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Payload enviado ao Meta
                   </p>
@@ -210,7 +210,7 @@ export default async function ConversionDetailPage({ params }: { params: Promise
 
             {conversion.meta_response && (
               <section className="section-card surface overflow-hidden">
-                <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+                <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Resposta da API do Meta
                   </p>

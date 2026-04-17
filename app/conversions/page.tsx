@@ -14,7 +14,7 @@ function StatusBadge({ status }: { status: string }) {
     sent: 'bg-[var(--success-soft)] text-[var(--success)]',
     error: 'bg-[var(--danger-soft)] text-[var(--danger)]',
     pending: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+  }[status] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   const labels = {
     sent: 'Enviado',
@@ -30,7 +30,7 @@ function EventBadge({ eventName }: { eventName: string }) {
     Purchase: 'bg-[var(--success-soft)] text-[var(--success)]',
     LeadSubmitted: 'bg-[var(--info-soft)] text-[var(--info)]',
     InitiateCheckout: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+  }[eventName] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   const labels = {
     Purchase: 'Purchase',
@@ -44,10 +44,10 @@ function EventBadge({ eventName }: { eventName: string }) {
 function SourceBadge({ source }: { source: Conversion['source'] }) {
   const styles = {
     whatsapp: 'bg-[var(--success-soft)] text-[var(--success)]',
-    manual: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
-    stripe: 'bg-[rgba(87,82,195,0.12)] text-[#5146b5]',
-    mercadopago: 'bg-[rgba(0,147,211,0.12)] text-[#0d6ea0]',
-  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+    manual: 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]',
+    stripe: 'bg-[rgba(129,140,248,0.16)] text-[#c7d2fe]',
+    mercadopago: 'bg-[rgba(34,211,238,0.16)] text-[#a5f3fc]',
+  }[source] || 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
 
   return <span className={`tag ${styles}`}>{source}</span>
 }
@@ -179,21 +179,21 @@ export default async function ConversionsPage() {
                 Interpretação operacional
               </p>
               <p className="mt-2 max-w-4xl text-sm leading-7 text-[var(--foreground-soft)]">
-                <code className="rounded-lg bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">
+                <code className="rounded-lg bg-[rgba(96,165,250,0.12)] px-2 py-1 text-[var(--info)]">
                   LeadSubmitted
                 </code>{' '}
                 nasce automaticamente quando o webhook recebe uma conversa atribuída com{' '}
-                <code className="rounded-lg bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                <code className="rounded-lg bg-[rgba(59,130,246,0.12)] px-2 py-1 text-[var(--accent-ink)]">
                   ctwa_clid
                 </code>
                 .{' '}
-                <code className="rounded-lg bg-[rgba(31,106,79,0.08)] px-2 py-1 text-[var(--success)]">
+                <code className="rounded-lg bg-[rgba(74,222,128,0.12)] px-2 py-1 text-[var(--success)]">
                   Purchase
                 </code>{' '}
                 entra depois, quando a venda foi confirmada.
               </p>
             </div>
-            <div className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(255,253,249,0.68)] px-4 py-3 text-sm text-[var(--foreground-soft)]">
+            <div className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.78)] px-4 py-3 text-sm text-[var(--foreground-soft)]">
               Use esta tela para operação diária.
             </div>
           </div>
@@ -201,7 +201,7 @@ export default async function ConversionsPage() {
 
         {conversions.length === 0 && !dbError ? (
           <section className="section-card surface-strong p-10 text-center">
-            <div className="mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.6rem] border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.72)]">
+            <div className="mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.6rem] border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.82)]">
               <svg className="h-9 w-9 text-[var(--foreground-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -211,7 +211,7 @@ export default async function ConversionsPage() {
                 />
               </svg>
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold tracking-[-0.04em] text-[#162233]">
+            <h2 className="mt-5 text-2xl font-extrabold tracking-[-0.04em] text-[var(--foreground)]">
               Nenhuma conversão registrada ainda
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[var(--foreground-soft)]">
@@ -224,12 +224,12 @@ export default async function ConversionsPage() {
           </section>
         ) : (
           <section className="section-card surface overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-[rgba(52,39,24,0.08)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3 border-b border-[rgba(148,163,184,0.12)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                   Timeline operacional
                 </p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                   Últimos registros de conversão
                 </h2>
               </div>
@@ -263,13 +263,13 @@ export default async function ConversionsPage() {
                         <EventBadge eventName={c.event_name} />
                       </td>
                       <td>
-                        <div className="font-semibold text-[#162233]">{c.customer_name || '—'}</div>
+                        <div className="font-semibold text-[var(--foreground)]">{c.customer_name || '—'}</div>
                         <div className="mt-1 text-xs text-[var(--foreground-muted)]">
                           {c.customer_phone ? formatBrazilPhone(c.customer_phone) : c.customer_email || ''}
                         </div>
                       </td>
                       <td>
-                        <div className="font-medium text-[#243247]">
+                        <div className="font-medium text-[var(--foreground-soft)]">
                           {c.product_name ||
                             (c.event_name === 'LeadSubmitted' ? 'Lead automático do WhatsApp' : '—')}
                         </div>
@@ -282,7 +282,7 @@ export default async function ConversionsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="text-right font-semibold text-[#162233]">
+                      <td className="text-right font-semibold text-[var(--foreground)]">
                         {formatConversionValue(c)}
                       </td>
                       <td className="text-center">
@@ -291,7 +291,7 @@ export default async function ConversionsPage() {
                       <td className="text-right">
                         <Link
                           href={`/conversions/${c.id}`}
-                          className="font-semibold text-[var(--info)] hover:text-[#173f84]"
+                          className="font-semibold text-[var(--info)] hover:text-white"
                         >
                           Abrir →
                         </Link>

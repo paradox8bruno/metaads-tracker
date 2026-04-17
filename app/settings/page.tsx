@@ -19,7 +19,7 @@ interface HealthData {
 function StatusIcon({ ok, loading }: { ok?: boolean; loading?: boolean }) {
   if (loading) {
     return (
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(37,89,178,0.1)]">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(96,165,250,0.14)]">
         <span className="spinner h-3.5 w-3.5 text-[var(--info)]" />
       </span>
     )
@@ -57,7 +57,7 @@ function ConnectionCard({ check, loading }: { check?: CheckResult; loading: bool
         <StatusIcon ok={check?.ok} loading={loading} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="font-bold text-[#162233] text-sm">{check?.label || '...'}</p>
+            <p className="font-bold text-[var(--foreground)] text-sm">{check?.label || '...'}</p>
             {check?.latencyMs !== undefined && (
               <span className="text-[0.68rem] font-mono text-[var(--foreground-muted)]">
                 {check.latencyMs}ms
@@ -211,10 +211,10 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {/* Connection checks */}
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4 flex items-center justify-between">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4 flex items-center justify-between">
                 <div>
                   <p className="section-label">Diagnóstico</p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Teste de conexões
                   </h2>
                 </div>
@@ -238,9 +238,9 @@ export default function SettingsPage() {
 
             {/* Webhook URL */}
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                 <p className="section-label">Webhook</p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                   URL para configurar na Meta
                 </h2>
               </div>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                 <div>
                   <p className="field-label">Callback URL (POST + GET)</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 rounded-xl border border-[rgba(52,39,24,0.12)] bg-[#f6f1e8] px-4 py-2.5 font-mono text-xs text-[#344154] break-all">
+                    <code className="flex-1 rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#0a1424] px-4 py-2.5 font-mono text-xs text-[#cbd5e1] break-all">
                       {webhookUrl}
                     </code>
                     <button
@@ -268,8 +268,8 @@ export default function SettingsPage() {
                   <ol className="list-decimal list-inside space-y-1 text-[0.8rem]">
                     <li>Acesse o painel do seu App na Meta for Developers</li>
                     <li>Vá em WhatsApp → Configuração → Webhooks</li>
-                    <li>Cole a URL acima no campo "Callback URL"</li>
-                    <li>No campo "Verify Token" use o valor de <code className="bg-[rgba(37,89,178,0.12)] px-1 rounded">WHATSAPP_WEBHOOK_VERIFY_TOKEN</code></li>
+                    <li>Cole a URL acima no campo &quot;Callback URL&quot;</li>
+                    <li>No campo &quot;Verify Token&quot; use o valor de <code className="bg-[rgba(96,165,250,0.12)] px-1 rounded">WHATSAPP_WEBHOOK_VERIFY_TOKEN</code></li>
                     <li>Assine os campos: <code className="bg-[rgba(37,89,178,0.12)] px-1 rounded">messages</code>, <code className="bg-[rgba(37,89,178,0.12)] px-1 rounded">message_deliveries</code>, <code className="bg-[rgba(37,89,178,0.12)] px-1 rounded">message_reads</code></li>
                   </ol>
                 </div>
@@ -280,9 +280,9 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {/* Required env vars */}
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                 <p className="section-label">Obrigatórias</p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                   Variáveis de ambiente
                 </h2>
               </div>
@@ -295,9 +295,9 @@ export default function SettingsPage() {
 
             {/* Optional env vars */}
             <section className="section-card surface overflow-hidden">
-              <div className="border-b border-[rgba(52,39,24,0.08)] px-5 py-4">
+              <div className="border-b border-[rgba(148,163,184,0.12)] px-5 py-4">
                 <p className="section-label">Opcionais</p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                   Variáveis extras
                 </h2>
               </div>
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[var(--info)] hover:text-[#173f84] font-medium"
+                      className="flex items-center gap-2 text-[var(--info)] hover:text-white font-medium"
                     >
                       <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

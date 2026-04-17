@@ -46,7 +46,7 @@ function StepHeader({
   const toneMap = {
     green: 'bg-[var(--success-soft)] text-[var(--success)]',
     blue: 'bg-[var(--info-soft)] text-[var(--info)]',
-    slate: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+    slate: 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]',
   }
 
   return (
@@ -58,7 +58,7 @@ function StepHeader({
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
           Etapa {step}
         </p>
-        <h2 className="text-base font-bold tracking-[-0.03em] text-[#162233]">{title}</h2>
+        <h2 className="text-base font-bold tracking-[-0.03em] text-[var(--foreground)]">{title}</h2>
       </div>
     </div>
   )
@@ -239,7 +239,7 @@ export default function NewConversionPage() {
               </p>
               <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
                 1. Clique no anúncio. 2. Mensagem chega no WhatsApp. 3. O webhook salva o
-                <code className="mx-1 rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                <code className="mx-1 rounded bg-[rgba(59,130,246,0.12)] px-2 py-1 text-[var(--accent-ink)]">
                   ctwa_clid
                 </code>
                 . 4. Você registra a venda ligada à conversa. 5. O projeto envia a conversão ao
@@ -284,7 +284,7 @@ export default function NewConversionPage() {
               <StepHeader step="1" title="Lead do WhatsApp" tone="green" />
 
               {loadingConversations ? (
-                <div className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] px-4 py-4 text-sm text-[var(--foreground-soft)]">
+                <div className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] px-4 py-4 text-sm text-[var(--foreground-soft)]">
                   Carregando conversas capturadas no webhook...
                 </div>
               ) : conversations.length === 0 ? (
@@ -294,7 +294,7 @@ export default function NewConversionPage() {
                   </p>
                   <p className="mt-1 text-sm leading-7 text-[var(--foreground-soft)]">
                     O lead só aparece aqui depois que o webhook do WhatsApp receber uma mensagem com
-                    <code className="mx-1 rounded bg-white px-2 py-1 text-[var(--accent-ink)]">
+                    <code className="mx-1 rounded bg-[rgba(17,29,48,0.92)] px-2 py-1 text-[var(--accent-ink)]">
                       ctwa_clid
                     </code>
                     vinda de anúncio Click to WhatsApp.
@@ -306,7 +306,7 @@ export default function NewConversionPage() {
               ) : (
                 <div className="space-y-5">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                       Conversa atribuída <span className="text-[var(--danger)]">*</span>
                     </label>
                     <select
@@ -333,17 +333,17 @@ export default function NewConversionPage() {
                   </div>
 
                   {selectedConversation && (
-                    <div className="rounded-[1.4rem] border border-[rgba(31,106,79,0.16)] bg-[rgba(217,239,228,0.68)] p-5">
+                    <div className="rounded-[1.4rem] border border-[rgba(31,106,79,0.16)] bg-[rgba(17,45,33,0.9)] p-5">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                          <p className="text-lg font-bold tracking-[-0.03em] text-[#163225]">
+                          <p className="text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                             {selectedConversation.customer_name || 'Lead sem nome'}
                           </p>
                           <p className="mt-1 text-sm text-[var(--success)]">
                             {formatConversationPhone(selectedConversation.customer_phone)}
                           </p>
                         </div>
-                        <div className="tag bg-white text-[var(--success)]">CTWA pronto</div>
+                        <div className="tag bg-[rgba(10,20,36,0.92)] text-[var(--success)]">CTWA pronto</div>
                       </div>
                       <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
@@ -363,11 +363,11 @@ export default function NewConversionPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="mt-4 rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                      <div className="mt-4 rounded-2xl border border-[rgba(148,163,184,0.16)] bg-[rgba(10,20,36,0.8)] px-4 py-3">
                         <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
                           CTWA CLID
                         </p>
-                        <p className="mt-2 break-all font-mono text-xs text-[#243247]">
+                        <p className="mt-2 break-all font-mono text-xs text-[var(--foreground-soft)]">
                           {selectedConversation.ctwa_clid}
                         </p>
                       </div>
@@ -381,7 +381,7 @@ export default function NewConversionPage() {
               <StepHeader step="2" title="Dados do cliente" tone="blue" />
               <div className="space-y-5">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                  <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                     Nome do cliente
                   </label>
                   <input
@@ -396,7 +396,7 @@ export default function NewConversionPage() {
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                       WhatsApp / Telefone
                     </label>
                     <input
@@ -417,7 +417,7 @@ export default function NewConversionPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                       Email
                     </label>
                     <input
@@ -438,7 +438,7 @@ export default function NewConversionPage() {
               <div className="space-y-5">
                 <div className="grid gap-5 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                       Valor da venda <span className="text-[var(--danger)]">*</span>
                     </label>
                     <div className="relative">
@@ -458,7 +458,7 @@ export default function NewConversionPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                       Tipo de evento
                     </label>
                     <select
@@ -478,7 +478,7 @@ export default function NewConversionPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                  <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                     Produto / Serviço
                   </label>
                   <input
@@ -492,7 +492,7 @@ export default function NewConversionPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#243247]">
+                  <label className="mb-2 block text-sm font-semibold text-[var(--foreground-soft)]">
                     Observações
                   </label>
                   <textarea
@@ -513,17 +513,17 @@ export default function NewConversionPage() {
               <StepHeader step="4" title="Atribuição Meta" tone="slate" />
               <div className="space-y-4 text-sm leading-7 text-[var(--foreground-soft)]">
                 <p>
-                  O <code className="rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">ctwa_clid</code>{' '}
+                  O <code className="rounded bg-[rgba(59,130,246,0.12)] px-2 py-1 text-[var(--accent-ink)]">ctwa_clid</code>{' '}
                   é capturado automaticamente no webhook e enviado ao Meta pelo dataset de Business
                   Messaging.
                 </p>
                 <p>
                   A conversa selecionada é a origem oficial da atribuição desta conversão. Não é mais
-                  necessário preencher <code className="rounded bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">fbclid</code>{' '}
+                  necessário preencher <code className="rounded bg-[rgba(96,165,250,0.12)] px-2 py-1 text-[var(--info)]">fbclid</code>{' '}
                   manualmente.
                 </p>
 
-                <label className="flex items-start gap-3 rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] px-4 py-4">
+                <label className="flex items-start gap-3 rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] px-4 py-4">
                   <input
                     type="checkbox"
                     name="useTestEventCode"
@@ -532,7 +532,7 @@ export default function NewConversionPage() {
                     className="mt-1 h-4 w-4 rounded border-[rgba(52,39,24,0.14)] text-[var(--info)] focus:ring-[var(--info)]"
                   />
                   <span>
-                    <span className="block text-sm font-semibold text-[#243247]">
+                    <span className="block text-sm font-semibold text-[var(--foreground-soft)]">
                       Enviar como evento de teste
                     </span>
                     <span className="mt-1 block text-xs leading-6 text-[var(--foreground-muted)]">

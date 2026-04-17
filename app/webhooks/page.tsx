@@ -50,7 +50,7 @@ function AttributionBadge({ conversation }: { conversation: WhatsAppConversation
 function OutcomeBadge({ delivery }: { delivery: WebhookDelivery }) {
   const styleMap: Record<WebhookDelivery['outcome'], string> = {
     accepted: 'bg-[var(--success-soft)] text-[var(--success)]',
-    accepted_empty: 'bg-[rgba(36,50,71,0.08)] text-[#243247]',
+    accepted_empty: 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]',
     invalid_signature: 'bg-[var(--danger-soft)] text-[var(--danger)]',
     invalid_json: 'bg-[var(--danger-soft)] text-[var(--danger)]',
     missing_app_secret: 'bg-[var(--danger-soft)] text-[var(--danger)]',
@@ -62,7 +62,7 @@ function OutcomeBadge({ delivery }: { delivery: WebhookDelivery }) {
 
 function LeadStatusBadge({ conversion }: { conversion?: Conversion }) {
   if (!conversion) {
-    return <span className="tag bg-[rgba(36,50,71,0.08)] text-[#243247]">Sem lead enviado</span>
+    return <span className="tag bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]">Sem lead enviado</span>
   }
 
   const styles = {
@@ -90,7 +90,7 @@ function SignatureBadge({ delivery }: { delivery: WebhookDelivery }) {
 
   const className =
     delivery.signature_valid === null
-      ? 'bg-[rgba(36,50,71,0.08)] text-[#243247]'
+      ? 'bg-[rgba(36,50,71,0.08)] text-[var(--foreground-soft)]'
       : delivery.signature_valid
         ? 'bg-[var(--info-soft)] text-[var(--info)]'
         : 'bg-[var(--danger-soft)] text-[var(--danger)]'
@@ -112,7 +112,7 @@ function DataField({
       <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
         {label}
       </p>
-      <p className={`mt-2 text-sm text-[#243247] ${mono ? 'break-all font-mono text-xs' : ''}`}>
+      <p className={`mt-2 text-sm text-[var(--foreground-soft)] ${mono ? 'break-all font-mono text-xs' : ''}`}>
         {value}
       </p>
     </div>
@@ -260,11 +260,11 @@ export default async function WebhookHistoryPage() {
               </p>
               <p className="mt-2 text-sm leading-7 text-[var(--foreground-soft)]">
                 Quando a conversa chega com{' '}
-                <code className="rounded bg-[rgba(183,100,43,0.08)] px-2 py-1 text-[var(--accent-ink)]">
+                <code className="rounded bg-[rgba(59,130,246,0.12)] px-2 py-1 text-[var(--accent-ink)]">
                   ctwa_clid
                 </code>
                 , o sistema registra a conversa, preserva o request bruto e cria{' '}
-                <code className="rounded bg-[rgba(37,89,178,0.08)] px-2 py-1 text-[var(--info)]">
+                <code className="rounded bg-[rgba(96,165,250,0.12)] px-2 py-1 text-[var(--info)]">
                   LeadSubmitted
                 </code>{' '}
                 automaticamente. Se a conversa chega sem CTWA, ela continua disponível aqui para
@@ -278,11 +278,11 @@ export default async function WebhookHistoryPage() {
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Auto leads
                   </p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Leads automáticos enviados
                   </h2>
                 </div>
-                <Link href="/conversions" className="text-sm font-semibold text-[var(--info)] hover:text-[#173f84]">
+                <Link href="/conversions" className="text-sm font-semibold text-[var(--info)] hover:text-white">
                   Ver conversões →
                 </Link>
               </div>
@@ -311,7 +311,7 @@ export default async function WebhookHistoryPage() {
                           <tr key={conversion.id}>
                             <td>{formatDatabaseTimestamp(conversion.created_at, { withSeconds: true })}</td>
                             <td>
-                              <div className="font-semibold text-[#162233]">
+                              <div className="font-semibold text-[var(--foreground)]">
                                 {conversion.customer_name || 'Lead sem nome'}
                               </div>
                               <div className="mt-1 font-mono text-[11px] text-[var(--foreground-muted)]">
@@ -320,7 +320,7 @@ export default async function WebhookHistoryPage() {
                             </td>
                             <td>{formatConversationPhone(conversion.customer_phone)}</td>
                             <td>
-                              <div className="font-mono text-xs text-[#243247]">
+                              <div className="font-mono text-xs text-[var(--foreground-soft)]">
                                 {conversion.whatsapp_conversation_id || '—'}
                               </div>
                               {conversion.whatsapp_conversation_id && (
@@ -330,7 +330,7 @@ export default async function WebhookHistoryPage() {
                               )}
                             </td>
                             <td>
-                              <div className="max-w-xs break-all font-mono text-xs text-[#243247]">
+                              <div className="max-w-xs break-all font-mono text-xs text-[var(--foreground-soft)]">
                                 {conversion.ctwa_clid || '—'}
                               </div>
                             </td>
@@ -347,7 +347,7 @@ export default async function WebhookHistoryPage() {
                             <td className="text-right">
                               <Link
                                 href={`/conversions/${conversion.id}`}
-                                className="font-semibold text-[var(--info)] hover:text-[#173f84]"
+                                className="font-semibold text-[var(--info)] hover:text-white"
                               >
                                 Abrir →
                               </Link>
@@ -367,7 +367,7 @@ export default async function WebhookHistoryPage() {
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Raw ingress
                   </p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Entregas brutas do webhook
                   </h2>
                 </div>
@@ -385,7 +385,7 @@ export default async function WebhookHistoryPage() {
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                               Webhook recebido
                             </h3>
                             <OutcomeBadge delivery={delivery} />
@@ -417,20 +417,20 @@ export default async function WebhookHistoryPage() {
                       )}
 
                       <div className="mt-4 space-y-3">
-                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                        <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                             Headers recebidos
                           </summary>
                           <pre className="code-block mt-3">{JSON.stringify(delivery.request_headers, null, 2)}</pre>
                         </details>
-                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                        <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                             Payload parseado
                           </summary>
                           <pre className="code-block mt-3">{JSON.stringify(delivery.payload, null, 2)}</pre>
                         </details>
-                        <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                          <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                        <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                          <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                             Body bruto
                           </summary>
                           <pre className="code-block mt-3">{delivery.raw_body}</pre>
@@ -448,7 +448,7 @@ export default async function WebhookHistoryPage() {
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Extra topics
                   </p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Automatic e tracking events
                   </h2>
                 </div>
@@ -466,7 +466,7 @@ export default async function WebhookHistoryPage() {
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                            <h3 className="text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                               {event.event_name || event.field}
                             </h3>
                             <span className="tag bg-[var(--info-soft)] text-[var(--info)]">
@@ -492,8 +492,8 @@ export default async function WebhookHistoryPage() {
                         </div>
                       </div>
 
-                      <details className="mt-4 rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                        <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                      <details className="mt-4 rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                        <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                           Payload bruto
                         </summary>
                         <pre className="code-block mt-3">{JSON.stringify(event.raw_payload, null, 2)}</pre>
@@ -510,7 +510,7 @@ export default async function WebhookHistoryPage() {
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Conversations
                   </p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Conversas recebidas
                   </h2>
                 </div>
@@ -531,7 +531,7 @@ export default async function WebhookHistoryPage() {
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                              <h3 className="text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                                 {conversation.customer_name || 'Lead sem nome'}
                               </h3>
                               <AttributionBadge conversation={conversation} />
@@ -577,10 +577,10 @@ export default async function WebhookHistoryPage() {
                             </p>
                             {leadConversion ? (
                               <div className="mt-2">
-                                <p className="font-mono text-xs text-[#243247]">{leadConversion.id}</p>
+                                <p className="font-mono text-xs text-[var(--foreground-soft)]">{leadConversion.id}</p>
                                 <Link
                                   href={`/conversions/${leadConversion.id}`}
-                                  className="mt-2 inline-flex text-sm font-semibold text-[var(--info)] hover:text-[#173f84]"
+                                  className="mt-2 inline-flex text-sm font-semibold text-[var(--info)] hover:text-white"
                                 >
                                   Abrir conversão →
                                 </Link>
@@ -596,14 +596,14 @@ export default async function WebhookHistoryPage() {
                         </div>
 
                         <div className="mt-4 space-y-3">
-                          <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                            <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                          <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                               Referral bruto
                             </summary>
                             <pre className="code-block mt-3">{JSON.stringify(conversation.raw_referral, null, 2)}</pre>
                           </details>
-                          <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-4">
-                            <summary className="cursor-pointer text-sm font-semibold text-[#243247]">
+                          <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-4">
+                            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground-soft)]">
                               Última mensagem bruta
                             </summary>
                             <pre className="code-block mt-3">{JSON.stringify(conversation.raw_last_message, null, 2)}</pre>
@@ -622,7 +622,7 @@ export default async function WebhookHistoryPage() {
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                     Event stream
                   </p>
-                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[#162233]">
+                  <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
                     Eventos do webhook
                   </h2>
                 </div>
@@ -658,12 +658,12 @@ export default async function WebhookHistoryPage() {
                             </td>
                             <td>{message.payload_type}</td>
                             <td>{message.direction}</td>
-                            <td className="font-mono text-xs text-[#243247]">{message.wa_id || '—'}</td>
+                            <td className="font-mono text-xs text-[var(--foreground-soft)]">{message.wa_id || '—'}</td>
                             <td>{formatEventLabel(message)}</td>
                             <td className="max-w-sm">{message.message_text || '—'}</td>
                             <td>
-                              <details className="rounded-2xl border border-[rgba(52,39,24,0.08)] bg-[rgba(239,231,220,0.56)] p-3">
-                                <summary className="cursor-pointer text-xs font-semibold text-[#243247]">
+                              <details className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[rgba(17,29,48,0.72)] p-3">
+                                <summary className="cursor-pointer text-xs font-semibold text-[var(--foreground-soft)]">
                                   Ver JSON
                                 </summary>
                                 <pre className="code-block mt-3 max-w-md">{JSON.stringify(message.raw_payload, null, 2)}</pre>
