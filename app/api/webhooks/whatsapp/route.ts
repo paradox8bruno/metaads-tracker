@@ -153,39 +153,23 @@ async function ensureAutomaticLeadSubmitted(params: {
       sourceRef,
     }))
 
-  let metaStatus: 'sent' | 'error' = 'sent'
-  let metaResponse: Record<string, unknown>
-  let metaEventPayload: Record<string, unknown> | null = null
-  let datasetId: string | null = null
+  const result = await sendConversionEvent({
+    eventId: conversion.event_id,
+    eventName: 'LeadSubmitted',
+    customerPhone: params.customerPhone || undefined,
+    customerName: params.customerName || undefined,
+    conversation: {
+      waba_id: params.wabaId,
+      ctwa_clid: params.ctwaClid,
+    },
+  })
 
-  try {
-    const result = await sendConversionEvent({
-      eventId: conversion.event_id,
-      eventName: 'LeadSubmitted',
-      customerPhone: params.customerPhone || undefined,
-      customerName: params.customerName || undefined,
-      conversation: {
-        waba_id: params.wabaId,
-        ctwa_clid: params.ctwaClid,
-      },
-    })
+  const metaStatus: 'sent' | 'error' = result.error || result.response.error ? 'error' : 'sent'
 
-    datasetId = result.datasetId
-    metaResponse = result.response
-    metaEventPayload = result.eventPayload
-
-    if (result.response.error) {
-      metaStatus = 'error'
-    }
-  } catch (error) {
-    metaStatus = 'error'
-    metaResponse = { error: String(error) }
-  }
-
-  await updateConversionMetaStatus(conversion.id, metaStatus, metaResponse, {
-    datasetId,
+  await updateConversionMetaStatus(conversion.id, metaStatus, result.response, {
+    datasetId: result.datasetId,
     ctwaClid: params.ctwaClid,
-    metaEventPayload,
+    metaEventPayload: result.eventPayload,
   })
 }
 

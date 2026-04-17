@@ -32,6 +32,7 @@ export interface SentBusinessMessagingEvent {
   datasetId: string
   eventPayload: Record<string, unknown>
   response: MetaCapiResponse
+  error?: string
 }
 
 function requireEnv(name: string, value: string | undefined): string {
@@ -206,14 +207,24 @@ export async function sendConversionEvent(
     body.test_event_code = data.testEventCode
   }
 
-  const response = (await graphApiRequest(`/${datasetId}/events`, {
-    method: 'POST',
-    body,
-  })) as MetaCapiResponse
+  let response: MetaCapiResponse
+  let apiError: string | undefined
+
+  try {
+    response = (await graphApiRequest(`/${datasetId}/events`, {
+      method: 'POST',
+      body,
+    })) as MetaCapiResponse
+  } catch (err) {
+    // Retorna o payload mesmo em caso de erro para permitir auditoria
+    apiError = String(err)
+    response = { error: { message: apiError, type: 'api_error', code: 0 } }
+  }
 
   return {
     datasetId,
     eventPayload,
-    response,
+    response: response!,
+    error: apiError,
   }
 }

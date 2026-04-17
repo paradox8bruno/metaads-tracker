@@ -133,51 +133,37 @@ export async function POST(req: NextRequest) {
       sourceRef: `whatsapp:${conversation.id}:${eventId}`,
     })
 
-    let metaStatus: 'sent' | 'error' = 'sent'
-    let metaResponse: Record<string, unknown>
-    let metaEventPayload: Record<string, unknown> | null = null
-    let datasetId: string | null = null
+    const result = await sendConversionEvent({
+      eventId,
+      eventName,
+      value,
+      currency,
+      customerPhone: normalizedCustomerPhone || undefined,
+      customerEmail,
+      customerName,
+      testEventCode: useTestEventCode ? process.env.META_TEST_EVENT_CODE : undefined,
+      conversation,
+    })
 
-    try {
-      const result = await sendConversionEvent({
-        eventId,
-        eventName,
-        value,
-        currency,
-        customerPhone: normalizedCustomerPhone || undefined,
-        customerEmail,
-        customerName,
-        testEventCode: useTestEventCode ? process.env.META_TEST_EVENT_CODE : undefined,
-        conversation,
-      })
+    const metaStatus: 'sent' | 'error' = result.error || result.response.error ? 'error' : 'sent'
 
-      datasetId = result.datasetId
-      metaResponse = result.response
-      metaEventPayload = result.eventPayload
-
-      if (result.response.error) {
-        metaStatus = 'error'
-      }
-    } catch (error) {
-      metaStatus = 'error'
-      metaResponse = { error: String(error) }
-    }
-
-    await updateConversionMetaStatus(conversion.id, metaStatus, metaResponse, {
-      datasetId,
+    await updateConversionMetaStatus(conversion.id, metaStatus, result.response, {
+      datasetId: result.datasetId,
       ctwaClid: conversation.ctwa_clid,
-      metaEventPayload,
+      metaEventPayload: result.eventPayload,
     })
 
     return NextResponse.json({
       ok: true,
       id: conversion.id,
       metaStatus,
-      metaResponse,
-      datasetId,
+      metaResponse: result.response,
+      datasetId: result.datasetId,
       testEventCodeUsed: useTestEventCode ? process.env.META_TEST_EVENT_CODE : undefined,
       eventsReceived:
-        typeof metaResponse.events_received === 'number' ? metaResponse.events_received : undefined,
+        typeof result.response.events_received === 'number'
+          ? result.response.events_received
+          : undefined,
     })
   } catch (error) {
     console.error('Erro ao registrar conversão:', error)
