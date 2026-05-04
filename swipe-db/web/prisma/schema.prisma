@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ad_cards {
+  id            BigInt  @id @default(autoincrement())
+  ad_archive_id String
+  position      Int     @default(0)
+  title         String?
+  body_text     String?
+  caption       String?
+  cta_text      String?
+  link_url      String?
+  raw_json      String?
+  ads           ads     @relation(fields: [ad_archive_id], references: [ad_archive_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([ad_archive_id], map: "idx_ad_cards_archive")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ad_media {
+  id            BigInt   @id @default(autoincrement())
+  ad_archive_id String
+  media_type    String
+  position      Int      @default(0)
+  url           String?
+  preview_url   String?
+  hd_url        String?
+  sd_url        String?
+  raw_json      String?
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  ads           ads      @relation(fields: [ad_archive_id], references: [ad_archive_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([ad_archive_id], map: "idx_ad_media_archive")
+}
+
+model ad_tags {
+  ad_archive_id String
+  tag_id        BigInt
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  ads           ads      @relation(fields: [ad_archive_id], references: [ad_archive_id], onDelete: Cascade, onUpdate: NoAction)
+  tags          tags     @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([ad_archive_id, tag_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ads {
+  ad_archive_id                      String       @id
+  ad_id                              String?
+  collation_id                       String?
+  collation_count                    Int?
+  page_id                            String?
+  page_name                          String?
+  is_active                          Int?
+  start_date                         BigInt?
+  end_date                           BigInt?
+  start_date_iso                     String?
+  end_date_iso                       String?
+  total_active_time                  BigInt?
+  active_days                        Int?
+  display_format                     String?
+  publisher_platform_json            String?
+  categories_json                    String?
+  targeted_or_reached_countries_json String?
+  country_iso_code                   String?
+  currency                           String?
+  spend_json                         String?
+  impressions_json                   String?
+  reach_estimate_json                String?
+  body_text                          String?
+  title                              String?
+  caption                            String?
+  cta_text                           String?
+  cta_type                           String?
+  link_url                           String?
+  link_domain                        String?
+  link_description                   String?
+  page_like_count                    BigInt?
+  page_profile_uri                   String?
+  page_profile_picture_url           String?
+  has_images                         Int          @default(0)
+  has_videos                         Int          @default(0)
+  media_count                        Int          @default(0)
+  raw_json                           String
+  source_import_run_id               BigInt?
+  first_seen_at                      DateTime     @default(now()) @db.Timestamp(6)
+  last_seen_at                       DateTime     @default(now()) @db.Timestamp(6)
+  notes                              String?
+  rating                             Int?
+  status                             String       @default("new")
+  ad_cards                           ad_cards[]
+  ad_media                           ad_media[]
+  ad_tags                            ad_tags[]
+  pages                              pages?       @relation(fields: [page_id], references: [page_id], onDelete: NoAction, onUpdate: NoAction)
+  import_runs                        import_runs? @relation(fields: [source_import_run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([active_days], map: "idx_ads_active_days")
+  @@index([is_active, active_days(sort: Desc), ad_archive_id], map: "idx_ads_active_days_desc")
+  @@index([country_iso_code], map: "idx_ads_country")
+  @@index([cta_text], map: "idx_ads_cta_text")
+  @@index([display_format], map: "idx_ads_display_format")
+  @@index([end_date], map: "idx_ads_end_date")
+  @@index([link_domain], map: "idx_ads_link_domain")
+  @@index([has_videos, has_images], map: "idx_ads_media_flags")
+  @@index([page_id, is_active, active_days(sort: Desc)], map: "idx_ads_page_active_days")
+  @@index([page_id], map: "idx_ads_page_id")
+  @@index([page_id, last_seen_at(sort: Desc)], map: "idx_ads_page_last_seen")
+  @@index([page_name], map: "idx_ads_page_name")
+  @@index([source_import_run_id], map: "idx_ads_source_import")
+  @@index([start_date], map: "idx_ads_start_date")
+  @@index([status, rating], map: "idx_ads_status_rating")
+}
+
+model import_runs {
+  id               BigInt             @id @default(autoincrement())
+  source           String
+  source_ref       String?
+  query            String?
+  actor_run_id     String?
+  dataset_id       String?
+  imported_at      DateTime           @default(now()) @db.Timestamp(6)
+  items_seen       Int                @default(0)
+  items_inserted   Int                @default(0)
+  items_updated    Int                @default(0)
+  notes            String?
+  ads              ads[]
+  raindrop_targets raindrop_targets[]
+
+  @@index([imported_at], map: "idx_import_runs_imported_at")
+  @@index([query], map: "idx_import_runs_query")
+  @@index([source], map: "idx_import_runs_source")
+}
+
+model page_favorites {
+  page_id    String   @id
+  note       String?
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  pages      pages    @relation(fields: [page_id], references: [page_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([page_id], map: "idx_page_favorites_page_id")
+}
+
+model page_library_syncs {
+  id                   BigInt   @id @default(autoincrement())
+  page_id              String
+  page_name            String?
+  max_items            Int
+  items_seen           Int      @default(0)
+  items_inserted       Int      @default(0)
+  items_updated        Int      @default(0)
+  captured_total_after Int      @default(0)
+  actor_run_id         String?
+  dataset_id           String?
+  status               String   @default("ok")
+  error                String?
+  synced_at            DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([page_id], map: "idx_page_library_syncs_page_id")
+  @@index([page_id, id(sort: Desc)], map: "idx_page_library_syncs_page_id_id")
+}
+
+model page_stats {
+  page_id         String    @id
+  page_name       String?
+  page_like_count BigInt?
+  ads_count       Int       @default(0)
+  active_ads      Int       @default(0)
+  max_active_days Int?
+  avg_active_days Float?
+  first_seen_at   DateTime? @db.Timestamp(6)
+  last_seen_at    DateTime? @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+  pages           pages     @relation(fields: [page_id], references: [page_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([active_ads(sort: Desc)], map: "idx_page_stats_active_ads")
+  @@index([ads_count(sort: Desc)], map: "idx_page_stats_ads_count")
+  @@index([avg_active_days(sort: Desc)], map: "idx_page_stats_avg_active_days")
+  @@index([page_like_count(sort: Desc)], map: "idx_page_stats_likes")
+  @@index([max_active_days(sort: Desc)], map: "idx_page_stats_max_active_days")
+}
+
+model pages {
+  page_id                  String          @id
+  page_name                String?
+  page_profile_uri         String?
+  page_profile_picture_url String?
+  page_categories_json     String?
+  page_like_count          BigInt?
+  is_deleted               Int?
+  first_seen_at            DateTime        @default(now()) @db.Timestamp(6)
+  last_seen_at             DateTime        @default(now()) @db.Timestamp(6)
+  ads                      ads[]
+  page_favorites           page_favorites?
+  page_stats               page_stats?
+}
+
+model raindrop_items {
+  raindrop_id      BigInt             @id
+  title            String?
+  link             String?
+  domain           String?
+  item_type        String?
+  collection_id    BigInt?
+  cover            String?
+  excerpt          String?
+  note             String?
+  tags_json        String?
+  media_json       String?
+  created_at       DateTime?          @db.Timestamp(6)
+  last_update      DateTime?          @db.Timestamp(6)
+  is_relevant      Int                @default(0)
+  relevance_reason String?
+  raw_json         String
+  first_synced_at  DateTime           @default(now()) @db.Timestamp(6)
+  last_synced_at   DateTime           @default(now()) @db.Timestamp(6)
+  raindrop_targets raindrop_targets[]
+
+  @@index([domain], map: "idx_raindrop_items_domain")
+  @@index([is_relevant, relevance_reason], map: "idx_raindrop_items_relevant")
+}
+
+model raindrop_targets {
+  id                 BigInt         @id @default(autoincrement())
+  raindrop_id        BigInt
+  target_type        String
+  target_value       String
+  query              String
+  source_url         String?
+  status             String         @default("new")
+  last_import_run_id BigInt?
+  created_at         DateTime       @default(now()) @db.Timestamp(6)
+  updated_at         DateTime       @default(now()) @db.Timestamp(6)
+  import_runs        import_runs?   @relation(fields: [last_import_run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  raindrop_items     raindrop_items @relation(fields: [raindrop_id], references: [raindrop_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([raindrop_id, target_type, target_value])
+  @@index([query], map: "idx_raindrop_targets_query")
+  @@index([status], map: "idx_raindrop_targets_status")
+}
+
+model tags {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @unique
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  ad_tags    ad_tags[]
+}

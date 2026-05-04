@@ -1,0 +1,8 @@
+.next
+node_modules
+out
+.DS_Store
+.env
+.env.local
+.env.*.local
+data/product-materials-sync-progress.jsonl

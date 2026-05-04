@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "business-hub-materials",
+  "compatibility_date": "2026-05-03",
+  "r2_buckets": [
+    {
+      "binding": "MATERIALS_BUCKET",
+      "bucket_name": "business-hub-materials"
+    }
+  ]
+}
